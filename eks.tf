@@ -49,7 +49,7 @@ module "eks" {
   eks_managed_node_groups = {
     # Worker nodes
     workers = {
-      name = "worker-node-group"
+      name = "worker"
 
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
@@ -65,7 +65,7 @@ module "eks" {
 
     # Istio ingress nodes
     istio-ingress = {
-      name = "istio-ingress-node-group"
+      name = "istio"
 
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
