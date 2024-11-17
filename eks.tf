@@ -5,7 +5,7 @@ provider "aws" {
 
 # VPC and Networking
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
   name = "${var.cluster_name}-vpc"
@@ -25,7 +25,7 @@ module "vpc" {
 
   private_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"          = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
   }
 
   public_subnet_tags = {
