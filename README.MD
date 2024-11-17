@@ -1,4 +1,4 @@
-![eks-drewpy](.img/aws_eks_drewpy_highlevel.png)
+![eks-drewpy](img/aws_eks_drewpy_highlevel.png)
 
 # Goals
 - Build EKS cluster
