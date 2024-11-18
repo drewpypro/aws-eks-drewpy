@@ -126,7 +126,10 @@ resource "helm_release" "istio_base" {
   chart      = "base"
   namespace  = "istio-system"
 
-  depends_on = [module.eks]
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.istio_system
+    ]
 }
 
 resource "helm_release" "istiod" {
@@ -135,10 +138,21 @@ resource "helm_release" "istiod" {
   chart      = "istiod"
   namespace  = "istio-system"
 
-  depends_on = [helm_release.istio_base]
+  depends_on = [
+    module.eks,
+    kubernetes_namespace.istio_system
+    ]
 }
 
 # Create namespaces
+
+# Create Istio System Namespace
+resource "kubernetes_namespace" "istio_system" {
+  metadata {
+    name = "istio-system"
+  }
+}
+
 resource "kubernetes_namespace" "namespace1" {
   metadata {
     name = "namespace1"
