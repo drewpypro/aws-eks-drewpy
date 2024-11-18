@@ -46,3 +46,13 @@ variable "public_subnet_cidrs" {
   type        = list(string)
   default     = ["10.0.101.0/24", "10.0.102.0/24"]
 }
+
+variable "SOURCE_SSH_NET" {
+  description = "Public IP to SSH to consumer ec2"
+  type        = string
+}
+
+variable "PUBLIC_KEY" {
+  description = "Public SSH key"
+  type        = string
+}
