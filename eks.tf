@@ -88,7 +88,7 @@ module "eks" {
 
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = false
-  cluster_public_access_cidrs     = ["0.0.0.0/0"]
+  cluster_endpoint_public_access_cidrs     = ["0.0.0.0/0"]
 
   tags = {
     Environment = var.environment
