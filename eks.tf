@@ -86,6 +86,8 @@ module "eks" {
     }
   }
 
+  endpoint_public_access = true
+
   tags = {
     Environment = var.environment
   }
