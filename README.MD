@@ -48,4 +48,4 @@ aws-eks-drewpy/
         ```
         ec2->node1
         ```
-    -ec2 to eks-api-server
+    -ec2 to eks-api-server 
