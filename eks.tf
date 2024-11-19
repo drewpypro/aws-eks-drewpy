@@ -95,10 +95,10 @@ module "eks" {
   }
 }
 
-output "private_subnet_ids" {
-  description = "List of private subnet IDs"
-  value       = module.eks.private_subnet_ids
-}
+# output "private_subnet_ids" {
+#   description = "List of private subnet IDs"
+#   value       = module.eks.private_subnet_ids
+# }
 
 # Kubernetes provider configuration
 provider "kubernetes" {
