@@ -33,7 +33,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_istio_homenet" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = var.SOURCE_SSH_NET
+  cidr_ipv4                    = var.HOME_IP
 }
 
 resource "aws_vpc_security_group_egress_rule" "istio_egress" {
@@ -80,7 +80,7 @@ resource "aws_vpc_security_group_ingress_rule" "worker_homenet" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = var.SOURCE_SSH_NET
+  cidr_ipv4                    = var.HOME_IP
 }
 
 resource "aws_vpc_security_group_egress_rule" "worker_egress" {
@@ -136,5 +136,5 @@ resource "aws_vpc_security_group_ingress_rule" "allow_cluster_homenet" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = var.SOURCE_SSH_NET
+  cidr_ipv4                    = var.HOME_IP
 }

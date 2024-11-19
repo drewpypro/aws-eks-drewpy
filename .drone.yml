@@ -54,6 +54,8 @@ steps:
       from_secret: TF_VAR_SOURCE_SSH_NET
     TF_VAR_PUBLIC_KEY:
       from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
   commands:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform init
@@ -74,6 +76,8 @@ steps:
       from_secret: TF_VAR_SOURCE_SSH_NET
     TF_VAR_PUBLIC_KEY:
       from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
   commands:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform apply -auto-approve
@@ -93,6 +97,8 @@ steps:
 #       from_secret: TF_VAR_SOURCE_SSH_NET
 #     TF_VAR_PUBLIC_KEY:
 #       from_secret: TF_VAR_PUBLIC_KEY
+#     TF_VAR_HOME_IP:
+#       from_secret: TF_VAR_HOME_IP
 #   commands:
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
 #     - terraform destroy -auto-approve
