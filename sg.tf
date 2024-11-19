@@ -12,7 +12,7 @@ resource "aws_vpc_security_group_ingress_rule" "istio_node_rule1" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = module.vpc.private_subnets
+  cidr_ipv4                    = "10.0.0.0/16"
 
 }
 
@@ -23,7 +23,7 @@ resource "aws_vpc_security_group_ingress_rule" "istio_node_rule2" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = module.vpc.private_subnets
+  cidr_ipv4                    = "10.0.0.0/16"
 
 }
 
@@ -59,7 +59,7 @@ resource "aws_vpc_security_group_ingress_rule" "worker_node_rule1" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = module.vpc.private_subnets
+  cidr_ipv4                    = "10.0.0.0/16"
 
 }
 
@@ -70,7 +70,7 @@ resource "aws_vpc_security_group_ingress_rule" "worker_node_rule2" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = module.vpc.private_subnets
+  cidr_ipv4                    = "10.0.0.0/16"
 
 }
 
@@ -107,7 +107,7 @@ resource "aws_vpc_security_group_ingress_rule" "cluster_endpoint_rule1" {
   from_port                    = 0
   to_port                      = 0
   ip_protocol                  = "-1"
-  cidr_ipv4                    = module.vpc.private_subnets
+  cidr_ipv4                    = "10.0.0.0/16"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "cluster_endpoint_rule2" {
