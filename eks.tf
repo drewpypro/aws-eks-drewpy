@@ -86,8 +86,8 @@ module "eks" {
     }
   }
 
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = false
+  cluster_endpoint_public_access       = true
+  cluster_endpoint_private_access      = false
   cluster_endpoint_public_access_cidrs = var.SOURCE_SSH_NET
 
   tags = {
@@ -134,7 +134,7 @@ resource "helm_release" "istio_base" {
   depends_on = [
     module.eks,
     kubernetes_namespace.istio_system
-    ]
+  ]
 }
 
 resource "helm_release" "istiod" {
@@ -146,7 +146,7 @@ resource "helm_release" "istiod" {
   depends_on = [
     module.eks,
     kubernetes_namespace.istio_system
-    ]
+  ]
 }
 
 # Install Istio ingress gateway
