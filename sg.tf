@@ -11,7 +11,7 @@ resource "aws_vpc_security_group_ingress_rule" "istio_node_rule1" {
   referenced_security_group_id = aws_security_group.worker_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = module.vpc.private_subnets
 
 }
@@ -32,7 +32,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_istio_homenet" {
   security_group_id            = aws_security_group.istio_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = var.SOURCE_SSH_NET
 }
 
@@ -41,8 +41,8 @@ resource "aws_vpc_security_group_egress_rule" "istio_egress" {
   security_group_id            = aws_security_group.istio_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
-  cidr_ipv4                    = ["0.0.0.0/0"]
+  ip_protocol                  = "-1"
+  cidr_ipv4                    = "0.0.0.0/0"
 }
 
 resource "aws_security_group" "worker_node_sg" {
@@ -58,7 +58,7 @@ resource "aws_vpc_security_group_ingress_rule" "worker_node_rule1" {
   referenced_security_group_id = aws_security_group.istio_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = module.vpc.private_subnets
 
 }
@@ -69,7 +69,7 @@ resource "aws_vpc_security_group_ingress_rule" "worker_node_rule2" {
   referenced_security_group_id = aws_security_group.cluster_endpoint_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = module.vpc.private_subnets
 
 }
@@ -79,7 +79,7 @@ resource "aws_vpc_security_group_ingress_rule" "worker_homenet" {
   security_group_id            = aws_security_group.istio_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = var.SOURCE_SSH_NET
 }
 
@@ -88,8 +88,8 @@ resource "aws_vpc_security_group_egress_rule" "worker_egress" {
   security_group_id            = aws_security_group.istio_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
-  cidr_ipv4                    = ["0.0.0.0/0"]
+  ip_protocol                  = "-1"
+  cidr_ipv4                    = "0.0.0.0/0"
 }
 
 resource "aws_security_group" "cluster_endpoint_sg" {
@@ -106,7 +106,7 @@ resource "aws_vpc_security_group_ingress_rule" "cluster_endpoint_rule1" {
   referenced_security_group_id = aws_security_group.istio_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = module.vpc.private_subnets
 }
 
@@ -116,7 +116,7 @@ resource "aws_vpc_security_group_ingress_rule" "cluster_endpoint_rule2" {
   referenced_security_group_id = aws_security_group.worker_node_sg.id
   from_port                    = 0
   to_port                      = 0
-  ip_protocol                     = "-1"
+  ip_protocol                  = "-1"
   cidr_ipv4                    = module.vpc.private_subnets
 }
 
@@ -126,8 +126,8 @@ resource "aws_vpc_security_group_egress_rule" "cluster_endpoint_egress" {
   security_group_id        = aws_security_group.cluster_endpoint_sg.id
   from_port                = 0
   to_port                  = 0
-  ip_protocol                 = "-1"
-  cidr_ipv4                = ["0.0.0.0/0"]
+  ip_protocol              = "-1"
+  cidr_ipv4                = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_cluster_homenet" {
