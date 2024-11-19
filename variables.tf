@@ -49,7 +49,7 @@ variable "public_subnet_cidrs" {
 
 variable "SOURCE_SSH_NET" {
   description = "Public IP to SSH to consumer ec2"
-  type        = string
+  type        = list(string)
 }
 
 variable "PUBLIC_KEY" {
