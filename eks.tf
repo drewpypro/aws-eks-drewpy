@@ -267,3 +267,11 @@ resource "kubernetes_deployment" "app2" {
     }
   }
 }
+
+resource "null_resource" "apply_k8s_resources" {
+  depends_on = [module.eks]
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f kubernetes/"
+  }
+}
