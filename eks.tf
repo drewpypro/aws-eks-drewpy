@@ -88,7 +88,7 @@ module "eks" {
 
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = false
-  cluster_endpoint_public_access_cidrs     = ["0.0.0.0/0"]
+  cluster_endpoint_public_access_cidrs = var.SOURCE_SSH_NET
 
   tags = {
     Environment = var.environment
@@ -149,7 +149,33 @@ resource "helm_release" "istiod" {
     ]
 }
 
-# Create namespaces
+# Install Istio ingress gateway
+resource "helm_release" "istio_ingress" {
+  name       = "istio-ingressgateway"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "gateway"
+  namespace  = kubernetes_namespace.istio_system.metadata[0].name
+
+  set {
+    name  = "gateways.istio-ingressgateway.enabled"
+    value = "true"
+  }
+  depends_on = [helm_release.istiod]
+}
+
+# Install Istio egress gateway
+resource "helm_release" "istio_egress" {
+  name       = "istio-egressgateway"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "gateway"
+  namespace  = kubernetes_namespace.istio_system.metadata[0].name
+  set {
+    name  = "gateways.istio-egressgateway.enabled"
+    value = "true"
+  }
+  depends_on = [helm_release.istiod]
+}
+
 
 # Create Istio System Namespace
 resource "kubernetes_namespace" "istio_system" {

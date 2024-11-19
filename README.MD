@@ -1,5 +1,29 @@
 ![eks-drewpy](img/aws_eks_drewpy_highlevel.png)
 
+```
+aws-eks-drewpy/
+├── eks/
+│   ├── eks.tf               # Main Terraform configuration for the EKS cluster
+│   ├── main.tf              # Provider and base setup (may include variables or VPC setup)
+│   ├── variables.tf         # Define variables like region, cluster name, etc.
+│   ├── outputs.tf           # Outputs for reference (like cluster endpoint, kubeconfig, etc.)
+│   └── iam.tf               # (Optional) IAM roles and policies for EKS
+├── kubernetes/
+│   ├── namespaces/
+│   │   ├── namespace1.yaml  # Namespace configuration for Namespace1
+│   │   └── namespace2.yaml  # Namespace configuration for Namespace2
+│   ├── gateways/
+│   │   ├── ingress-gateway.yaml  # Istio Ingress Gateway configuration
+│   │   └── egress-gateway.yaml   # Istio Egress Gateway configuration
+│   ├── virtual-services/
+│   │   ├── service1-virtual-service.yaml  # VirtualService for routing to service in Namespace1
+│   │   └── service2-virtual-service.yaml  # VirtualService for routing to service in Namespace2
+│   └── deployments/
+│       ├── app1-deployment.yaml  # Deployment configuration for app in Namespace1
+│       └── app2-deployment.yaml  # Deployment configuration for app in Namespace2
+└── README.md                   # Documentation on how to deploy and test
+```
+
 # Goals
 - Build EKS cluster
     - 2 worker nodes

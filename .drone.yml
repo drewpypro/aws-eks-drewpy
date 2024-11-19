@@ -1,0 +1,102 @@
+kind: pipeline
+type: docker
+name: terraform-pipeline
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  disable: true
+
+volumes:
+  - name: terraform
+    host:
+      path: /mnt/apppooldisk/devappdata/drone-runners
+
+steps:
+- name: create_directories
+  image: alpine:latest
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  commands:
+    - mkdir -p /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+
+- name: custom_clone
+  image: docker:git
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    GIT_REPO_URL:
+      from_secret: GIT_REPO_URL
+  commands:
+    - if [ -d /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/.git ]; then
+        cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/ && git fetch && git reset --hard origin/main;
+      else
+        git clone $GIT_REPO_URL /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/;
+      fi
+
+- name: terraform-plan
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - terraform init
+    - terraform plan
+
+# - name: terraform-apply
+#   image: hashicorp/terraform:latest
+#   network_mode: br1.201
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     TF_VAR_SOURCE_SSH_NET:
+#       from_secret: TF_VAR_SOURCE_SSH_NET
+#     TF_VAR_PUBLIC_KEY:
+#       from_secret: TF_VAR_PUBLIC_KEY
+#   commands:
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+#     - terraform apply -auto-approve
+
+# - name: terraform-destroy
+#   image: hashicorp/terraform:latest
+#   network_mode: br1.201
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     TF_VAR_SOURCE_SSH_NET:
+#       from_secret: TF_VAR_SOURCE_SSH_NET
+#     TF_VAR_PUBLIC_KEY:
+#       from_secret: TF_VAR_PUBLIC_KEY
+#   commands:
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+#     - terraform destroy -auto-approve
+
+trigger:
+  event:
+    - tag
