@@ -35,3 +35,4 @@ jobs:
       - name: terraform plan
         run: |
           terraform plan -out=tfplan
+          
