@@ -87,6 +87,7 @@ resource "aws_iam_policy" "flow_logs_policy" {
     Statement = [
       {
         Action = [
+          "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
         ],

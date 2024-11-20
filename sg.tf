@@ -50,14 +50,15 @@ resource "aws_vpc_security_group_ingress_rule" "allow_istio_homenet" {
   cidr_ipv4         = var.HOME_IP
 }
 
-resource "aws_vpc_security_group_egress_rule" "istio_egress" {
-  description       = "Allow all outbound traffic"
-  security_group_id = aws_security_group.istio_node_sg.id
-  from_port         = 0
-  to_port           = 0
-  ip_protocol       = "-1"
-  cidr_ipv4         = "0.0.0.0/0"
-}
+# Duplicate as EKS builds it's own
+# resource "aws_vpc_security_group_egress_rule" "istio_egress" {
+#   description       = "Allow all outbound traffic"
+#   security_group_id = aws_security_group.istio_node_sg.id
+#   from_port         = 0
+#   to_port           = 0
+#   ip_protocol       = "-1"
+#   cidr_ipv4         = "0.0.0.0/0"
+# }
 
 resource "aws_security_group" "worker_node_sg" {
   name        = "worker-node-sg"
@@ -103,21 +104,22 @@ resource "aws_vpc_security_group_ingress_rule" "worker_node_rule2" {
 
 resource "aws_vpc_security_group_ingress_rule" "worker_homenet" {
   description       = "Allow home networks"
-  security_group_id = aws_security_group.istio_node_sg.id
+  security_group_id = aws_security_group.worker_node_sg.id
   from_port         = 0
   to_port           = 0
   ip_protocol       = "-1"
   cidr_ipv4         = var.HOME_IP
 }
 
-resource "aws_vpc_security_group_egress_rule" "worker_egress" {
-  description       = "Allow all outbound traffic"
-  security_group_id = aws_security_group.istio_node_sg.id
-  from_port         = 0
-  to_port           = 0
-  ip_protocol       = "-1"
-  cidr_ipv4         = "0.0.0.0/0"
-}
+# # Duplicate as EKS builds it's own
+# resource "aws_vpc_security_group_egress_rule" "worker_egress" {
+#   description       = "Allow all outbound traffic"
+#   security_group_id = aws_security_group.istio_node_sg.id
+#   from_port         = 0
+#   to_port           = 0
+#   ip_protocol       = "-1"
+#   cidr_ipv4         = "0.0.0.0/0"
+# }
 
 resource "aws_security_group" "cluster_endpoint_sg" {
   name        = "cluster-endpoint-sg"
@@ -173,7 +175,7 @@ resource "aws_vpc_security_group_egress_rule" "cluster_endpoint_egress" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow_cluster_homenet" {
   description       = "Allow home networks"
-  security_group_id = aws_security_group.istio_node_sg.id
+  security_group_id = aws_security_group.cluster_endpoint_sg.id
   from_port         = 0
   to_port           = 0
   ip_protocol       = "-1"
