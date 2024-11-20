@@ -16,7 +16,7 @@ module "vpc" {
   enable_flow_log      = true
 
   flow_log_destination_arn   = aws_cloudwatch_log_group.vpc_flow_log_group.arn
-  flow_log_iam_role_arn      = aws_iam_role.flow_logs_role.arn
+  vpc_flow_log_iam_role_name = aws_iam_role.flow_logs_role.name
 
   tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
