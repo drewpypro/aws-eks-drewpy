@@ -57,7 +57,7 @@ steps:
     TF_VAR_HOME_IP:
       from_secret: TF_VAR_HOME_IP
   commands:
-    - apk add --no-cache curl unzip bash git
+    - apk add --no-cache curl unzip bash
     # Install AWS CLI
     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     - unzip awscliv2.zip && ./aws/install
@@ -89,6 +89,7 @@ steps:
     TF_VAR_HOME_IP:
       from_secret: TF_VAR_HOME_IP
   commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - apk add --no-cache curl unzip bash git
     # Install AWS CLI
     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -101,7 +102,7 @@ steps:
     - chmod +x kubectl && mv kubectl /usr/local/bin/
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform init
-    - terraform plan
+    - terraform apply -auto-approve
 
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
