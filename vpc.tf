@@ -33,7 +33,6 @@ module "vpc" {
   }
 }
 
-
 resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
   name              = "/aws/vpc/${var.cluster_name}-flow-logs"
   retention_in_days = 1
