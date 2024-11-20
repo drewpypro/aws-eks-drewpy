@@ -15,8 +15,8 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_flow_log      = true
 
-  flow_log_cloudwatch_log_group_name = "/aws/vpc/${var.cluster_name}-flow-logs"
-  flow_log_cloudwatch_iam_role_arn   = aws_iam_role.flow_logs_role.arn
+  flow_log_destination_arn         = aws_cloudwatch_log_group.vpc_flow_log_group.arn
+  flow_log_cloudwatch_iam_role_arn = aws_iam_role.flow_logs_role.arn
 
   tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
