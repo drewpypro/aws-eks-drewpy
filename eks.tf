@@ -11,12 +11,36 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
 
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
+  vpc_id                                = module.vpc.vpc_id
+  subnet_ids                            = module.vpc.private_subnets
+  cluster_endpoint_public_access        = true
+  cluster_endpoint_private_access       = true
+  cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
+  cluster_additional_security_group_ids = [aws_security_group.cluster_endpoint_sg.id]
+
+  # Grant the Terraform caller administrative access to the cluster
+  enable_cluster_creator_admin_permissions = true
+
+  create_iam_role = true
+  #   create_iam_role = false
+  #   iam_role_arn    = aws_iam_role.eks_cluster_role.arn
+
+  eks_managed_node_group_defaults = {
+    iam_role_additional_policies = [
+      "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+      "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+    ]
+  }
+
+  cluster_addons = {
+    coredns                = {}
+    kube-proxy             = {}
+    vpc-cni                = {}
+    eks-pod-identity-agent = {}
+  }
 
   # EKS Managed Node Group(s)
   eks_managed_node_groups = {
-    # Worker nodes
     workers = {
       name = "worker"
 
@@ -27,13 +51,13 @@ module "eks" {
       max_size        = 2
       desired_size    = 2
       security_groups = [aws_security_group.worker_node_sg.id]
+      #   iam_role_arn    = aws_iam_role.eks_node_role.arn
 
       labels = {
         role = "worker"
       }
     }
 
-    # Istio ingress nodes
     istio-ingress = {
       name = "istio"
 
@@ -44,6 +68,8 @@ module "eks" {
       max_size        = 2
       desired_size    = 2
       security_groups = [aws_security_group.istio_node_sg.id]
+      #   iam_role_arn    = aws_iam_role.eks_node_role.arn
+
 
       labels = {
         role = "istio-ingress"
@@ -57,20 +83,10 @@ module "eks" {
     }
   }
 
-  cluster_endpoint_public_access        = true
-  cluster_endpoint_private_access       = false
-  cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
-  cluster_additional_security_group_ids = [aws_security_group.cluster_endpoint_sg.id]
-
   tags = {
     Environment = var.environment
   }
 }
-
-# output "private_subnet_ids" {
-#   description = "List of private subnet IDs"
-#   value       = module.eks.private_subnet_ids
-# }
 
 # Kubernetes provider configuration
 provider "kubernetes" {
