@@ -41,17 +41,6 @@ resource "aws_vpc_security_group_ingress_rule" "istio_node_rule2" {
 }
 
 
-resource "aws_vpc_security_group_ingress_rule" "istio_node_rule2" {
-  description                  = "Allow nodes ingress"
-  security_group_id            = aws_security_group.istio_node_sg.id
-  referenced_security_group_id = aws_security_group.cluster_endpoint_sg.id
-  from_port                    = 0
-  to_port                      = 0
-  ip_protocol                  = "-1"
-#   cidr_ipv4                    = "10.0.0.0/16"
-
-}
-
 resource "aws_vpc_security_group_ingress_rule" "allow_istio_homenet" {
   description                  = "Allow home networks"
   security_group_id            = aws_security_group.istio_node_sg.id
