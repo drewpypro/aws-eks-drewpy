@@ -66,33 +66,7 @@ steps:
     - terraform init
     - terraform plan
 
-- name: terraform-apply
-  image: hashicorp/terraform:latest
-  network_mode: br1.201
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    TF_VAR_SOURCE_SSH_NET:
-      from_secret: TF_VAR_SOURCE_SSH_NET
-    TF_VAR_PUBLIC_KEY:
-      from_secret: TF_VAR_PUBLIC_KEY
-    TF_VAR_HOME_IP:
-      from_secret: TF_VAR_HOME_IP
-  commands:
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-    - apk add --no-cache curl bash # Add dependencies
-    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip awscliv2.zip && ./aws/install
-    - curl -LO "https://dl.k8s.io/release/v1.21.0/bin/linux/amd64/kubectl"
-    - chmod +x kubectl && mv kubectl /usr/local/bin/
-    - terraform apply -auto-approve
-
-# - name: terraform-destroy
+# - name: terraform-apply
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
 #   volumes:
@@ -111,7 +85,33 @@ steps:
 #       from_secret: TF_VAR_HOME_IP
 #   commands:
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-#     - terraform destroy -auto-approve
+#         - apk add --no-cache curl bash # Add dependencies
+#     - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+#     - unzip awscliv2.zip && ./aws/install
+#     - curl -LO "https://dl.k8s.io/release/v1.21.0/bin/linux/amd64/kubectl"
+#     - chmod +x kubectl && mv kubectl /usr/local/bin/
+#     - terraform apply -auto-approve
+
+- name: terraform-destroy
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - terraform destroy -auto-approve
 
 trigger:
   event:
