@@ -13,8 +13,8 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = false
   enable_dns_hostnames = true
-  enable_flow_log = true
-  
+  enable_flow_log      = true
+
   flow_log_cloudwatch_log_group_name = "/aws/vpc/${var.cluster_name}-flow-logs"
   flow_log_cloudwatch_iam_role_arn   = aws_iam_role.flow_logs_role.arn
 

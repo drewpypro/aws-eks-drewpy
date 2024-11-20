@@ -3,37 +3,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-# VPC and Networking
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
-
-  name = "${var.cluster_name}-vpc"
-  cidr = var.vpc_cidr
-
-  azs             = var.availability_zones
-  private_subnets = var.private_subnet_cidrs
-  public_subnets  = var.public_subnet_cidrs
-
-  enable_nat_gateway   = true
-  single_nat_gateway   = false
-  enable_dns_hostnames = true
-
-  tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
-
-  private_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"           = "1"
-  }
-
-  public_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                    = "1"
-  }
-}
-
 # EKS Cluster
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -54,9 +23,10 @@ module "eks" {
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
 
-      min_size     = 2
-      max_size     = 2
-      desired_size = 2
+      min_size        = 2
+      max_size        = 2
+      desired_size    = 2
+      security_groups = [aws_security_group.worker_node_sg.id]
 
       labels = {
         role = "worker"
@@ -70,9 +40,10 @@ module "eks" {
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
 
-      min_size     = 2
-      max_size     = 2
-      desired_size = 2
+      min_size        = 2
+      max_size        = 2
+      desired_size    = 2
+      security_groups = [aws_security_group.istio_node_sg.id]
 
       labels = {
         role = "istio-ingress"
@@ -86,9 +57,10 @@ module "eks" {
     }
   }
 
-  cluster_endpoint_public_access       = true
-  cluster_endpoint_private_access      = false
-  cluster_endpoint_public_access_cidrs = var.SOURCE_SSH_NET
+  cluster_endpoint_public_access        = true
+  cluster_endpoint_private_access       = false
+  cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
+  cluster_additional_security_group_ids = [aws_security_group.cluster_endpoint_sg.id]
 
   tags = {
     Environment = var.environment
