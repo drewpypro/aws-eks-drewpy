@@ -26,10 +26,10 @@ module "eks" {
   #   iam_role_arn    = aws_iam_role.eks_cluster_role.arn
 
   eks_managed_node_group_defaults = {
-    iam_role_additional_policies = {
-      "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-      "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-    }
+   iam_role_additional_policies = {
+     AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+   }
   }
 
   cluster_addons = {
