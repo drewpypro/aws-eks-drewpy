@@ -23,7 +23,9 @@ aws-eks-drewpy/
 │       └── app2-deployment.yaml  # Deployment configuration for app in Namespace2
 └── README.md                   # Documentation on how to deploy and test
 ```
-
+# References
+ - [Control Plane SG](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest#input_cluster_additional_security_group_ids)
+ 
 # Goals
 - Build EKS cluster
     - 2 worker nodes
