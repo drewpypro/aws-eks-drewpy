@@ -33,14 +33,14 @@ module "vpc" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
-  name              = "/aws/vpc/${var.cluster_name}-flow-logs"
+resource "aws_cloudwatch_log_group" "vpc_flow_log_groupv2" {
+  name              = "/aws/vpc/${var.cluster_name}-flow-logsv2"
   retention_in_days = 1
 }
 
 resource "aws_flow_log" "vpc_flow_log" {
   log_destination_type = "cloud-watch-logs"
-  log_destination      = aws_cloudwatch_log_group.vpc_flow_log_group.arn
+  log_destination      = aws_cloudwatch_log_group.vpc_flow_log_groupv2.arn
   iam_role_arn         = aws_iam_role.flow_logs_role.arn
   vpc_id               = module.vpc.vpc_id
   traffic_type         = "ALL"
