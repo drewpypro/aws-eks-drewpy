@@ -13,10 +13,7 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = false
   enable_dns_hostnames = true
-  enable_flow_log      = true
-
-  flow_log_destination_arn   = aws_cloudwatch_log_group.vpc_flow_log_group.arn
-  vpc_flow_log_iam_role_name = aws_iam_role.flow_logs_role.name
+  enable_flow_log      = false
 
   tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
