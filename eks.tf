@@ -47,8 +47,7 @@ module "eks" {
   cluster_endpoint_public_access        = true
   cluster_endpoint_private_access       = true
   cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
-  cluster_additional_security_group_ids = module.security_groups.cluster_endpoint_sg.id
-
+  cluster_additional_security_group_ids = [module.security_groups.security_group_ids["cluster_endpoint"]]
   # Grant the Terraform caller administrative access to the cluster
   enable_cluster_creator_admin_permissions = true
 
