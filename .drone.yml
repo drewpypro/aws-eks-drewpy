@@ -39,48 +39,7 @@ steps:
         git clone $GIT_REPO_URL /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/;
       fi
 
-- name: terraform-apply
-  image: hashicorp/terraform:latest
-  network_mode: br1.201
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    TF_VAR_SOURCE_SSH_NET:
-      from_secret: TF_VAR_SOURCE_SSH_NET
-    TF_VAR_PUBLIC_KEY:
-      from_secret: TF_VAR_PUBLIC_KEY
-    TF_VAR_HOME_IP:
-      from_secret: TF_VAR_HOME_IP
-  commands:
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-    - terraform init
-    - terraform apply -auto-approve
-
-- name: kubectl-apply
-  image: bitnami/kubectl:latest
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-  commands:
-   - ls -R /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
-   - apk add --no-cache curl unzip bash git
-   # Install AWS CLI
-   - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-   - unzip awscliv2.zip && ./aws/install
-   - aws eks update-kubeconfig --region  us-east-1 --name eks-drewpy
-   - kubectl wait --for=condition=Ready nodes --timeout=300s
-   - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
-   - kubectl get nodes
-
-
-# - name: terraform-destroy
+# - name: terraform-apply
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
 #   volumes:
@@ -99,7 +58,48 @@ steps:
 #       from_secret: TF_VAR_HOME_IP
 #   commands:
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-#     - terraform destroy -auto-approve
+#     - terraform init
+#     - terraform apply -auto-approve
+
+# - name: kubectl-apply
+#   image: bitnami/kubectl:latest
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#   commands:
+#    - ls -R /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
+#    - apk add --no-cache curl unzip bash git
+#    # Install AWS CLI
+#    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+#    - unzip awscliv2.zip && ./aws/install
+#    - aws eks update-kubeconfig --region  us-east-1 --name eks-drewpy
+#    - kubectl wait --for=condition=Ready nodes --timeout=300s
+#    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
+#    - kubectl get nodes
+
+
+- name: terraform-destroy
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - terraform destroy -auto-approve
 
 trigger:
   branch:
