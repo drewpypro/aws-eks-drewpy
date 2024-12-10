@@ -48,8 +48,11 @@ module "eks" {
   cluster_endpoint_private_access       = true
   cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
   cluster_additional_security_group_ids = [module.security_groups.security_group_ids["cluster_endpoint"]]
+  
   # Grant the Terraform caller administrative access to the cluster
   enable_cluster_creator_admin_permissions = true
+  create_node_security_group = false
+
 
   create_iam_role = true
   #   create_iam_role = false
@@ -69,65 +72,49 @@ module "eks" {
     eks-pod-identity-agent = {}
   }
 
-  # EKS Managed Node Group(s)
-  eks_managed_node_groups = {
-    # Worker nodes
-    workers = {
-      name = "worker"
+  # Disable node group creation within the module
+  eks_managed_node_groups = {}
 
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
+  # # EKS Managed Node Group(s)
+  # eks_managed_node_groups = {
+  #   # Worker nodes
+  #   workers = {
+  #     name = "worker"
 
-      min_size        = 2
-      max_size        = 2
-      desired_size    = 2
+  #     instance_types = ["t3.medium"]
+  #     capacity_type  = "ON_DEMAND"
 
-      labels = {
-        role = "worker"
-      }
-    }
+  #     min_size        = 2
+  #     max_size        = 2
+  #     desired_size    = 2
 
-    # Istio ingress nodes
-    istio-ingress = {
-      name = "istio"
+  #     labels = {
+  #       role = "worker"
+  #     }
+  #   }
 
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
+  #   # Istio ingress nodes
+  #   istio-ingress = {
+  #     name = "istio"
 
-      min_size        = 2
-      max_size        = 2
-      desired_size    = 2
+  #     instance_types = ["t3.medium"]
+  #     capacity_type  = "ON_DEMAND"
 
-      labels = {
-        role = "istio-ingress"
-      }
+  #     min_size        = 2
+  #     max_size        = 2
+  #     desired_size    = 2
 
-      taints = [{
-        key    = "dedicated"
-        value  = "istio-ingress"
-        effect = "NO_SCHEDULE"
-      }]
-    }
-  }
+  #     labels = {
+  #       role = "istio-ingress"
+  #     }
 
-    node_security_group_additional_rules = {
-      ingress_15017 = {
-        description                   = "Cluster API - Istio Webhook namespace.sidecar-injector.istio.io"
-        protocol                      = "TCP"
-        from_port                     = 15017
-        to_port                       = 15017
-        type                          = "ingress"
-        source_cluster_security_group = true
-      }
-      ingress_15012 = {
-        description                   = "Cluster API to nodes ports/protocols"
-        protocol                      = "TCP"
-        from_port                     = 15012
-        to_port                       = 15012
-        type                          = "ingress"
-        source_cluster_security_group = true
-      }
-    }
+  #     taints = [{
+  #       key    = "dedicated"
+  #       value  = "istio-ingress"
+  #       effect = "NO_SCHEDULE"
+  #     }]
+  #   }
+  # }
 
   tags = {
     Environment = var.environment
@@ -135,6 +122,58 @@ module "eks" {
 
   depends_on = [
     module.security_groups,
+  ]
+}
+
+resource "aws_eks_node_group" "worker_nodes" {
+  cluster_name    = module.eks.cluster_name
+  node_role_arn   = aws_iam_role.worker_nodes.arn
+  subnet_ids      = module.vpc.private_subnets
+  instance_types  = ["t3.medium"]
+
+  scaling_config {
+    desired_size = 3
+    max_size     = 5
+    min_size     = 2
+  }
+
+  tags = {
+    "Name" = "worker-nodes"
+  }
+
+  remote_access {
+    ec2_ssh_key = var.PUBLIC_KEY
+    source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
+  }
+
+  depends_on = [
+    module.eks,
+  ]
+}
+
+resource "aws_eks_node_group" "istio_nodes" {
+  cluster_name    = module.eks.cluster_name
+  node_role_arn   = aws_iam_role.istio_nodes.arn
+  subnet_ids      = module.vpc.private_subnets
+  instance_types  = ["t3.medium"]
+
+  scaling_config {
+    desired_size = 3
+    max_size     = 5
+    min_size     = 2
+  }
+
+  tags = {
+    "Name" = "istio-nodes"
+  }
+
+  remote_access {
+    ec2_ssh_key = var.PUBLIC_KEY
+    source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
+  }
+
+  depends_on = [
+    module.eks,
   ]
 }
 
@@ -198,7 +237,7 @@ resource "kubernetes_namespace_v1" "istio_system" {
   }
 }
 
-resource "kubernetes_namespace" "namespace1" {
+resource "kubernetes_namespace_v1" "namespace1" {
   metadata {
     name = "namespace1"
     labels = {
@@ -207,7 +246,7 @@ resource "kubernetes_namespace" "namespace1" {
   }
 }
 
-resource "kubernetes_namespace" "namespace2" {
+resource "kubernetes_namespace_v1" "namespace2" {
   metadata {
     name = "namespace2"
     labels = {
@@ -220,7 +259,7 @@ resource "kubernetes_namespace" "namespace2" {
 resource "kubernetes_deployment" "app1" {
   metadata {
     name      = "app1"
-    namespace = kubernetes_namespace.namespace1.metadata[0].name
+    namespace = kubernetes_namespace_v1.namespace1.metadata[0].name
   }
 
   spec {
@@ -253,7 +292,7 @@ resource "kubernetes_deployment" "app1" {
 resource "kubernetes_deployment" "app2" {
   metadata {
     name      = "app2"
-    namespace = kubernetes_namespace.namespace2.metadata[0].name
+    namespace = kubernetes_namespace_v1.namespace2.metadata[0].name
   }
 
   spec {
