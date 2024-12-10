@@ -233,10 +233,10 @@ resource "aws_eks_node_group" "istio_nodes" {
     "Name" = "istio-nodes"
   }
 
-  remote_access {
-    ec2_ssh_key = var.PUBLIC_KEY
-    source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
-  }
+  # remote_access {
+  #   ec2_ssh_key = var.PUBLIC_KEY
+  #   source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
+  # }
 
   depends_on = [
     module.eks,
