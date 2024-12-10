@@ -66,7 +66,7 @@ module "eks" {
   # }
 
   cluster_addons = {
-    coredns                = {}
+    # coredns                = {}
     kube-proxy             = {}
     vpc-cni                = {}
     eks-pod-identity-agent = {}
@@ -125,6 +125,14 @@ module "eks" {
   ]
 }
 
+resource "aws_eks_addon" "coredns" {
+  cluster_name = module.eks.cluster_name
+  addon_name   = "coredns"
+
+  depends_on = [
+    aws_eks_node_group.worker_nodes
+  ]
+}
 
 resource "aws_iam_role" "worker_nodes" {
   name               = "worker-nodes-role"
