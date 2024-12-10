@@ -58,12 +58,12 @@ module "eks" {
   #   create_iam_role = false
   #   iam_role_arn    = aws_iam_role.eks_cluster_role.arn
 
-  eks_managed_node_group_defaults = {
-   iam_role_additional_policies = {
-     AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-   }
-  }
+  # eks_managed_node_group_defaults = {
+  #  iam_role_additional_policies = {
+  #    AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+  #    AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  #  }
+  # }
 
   cluster_addons = {
     coredns                = {}
@@ -125,57 +125,57 @@ module "eks" {
   ]
 }
 
-resource "aws_eks_node_group" "worker_nodes" {
-  cluster_name    = module.eks.cluster_name
-  node_role_arn   = aws_iam_role.worker_nodes.arn
-  subnet_ids      = module.vpc.private_subnets
-  instance_types  = ["t3.medium"]
+# resource "aws_eks_node_group" "worker_nodes" {
+#   cluster_name    = module.eks.cluster_name
+#   node_role_arn   = aws_iam_role.worker_nodes.arn
+#   subnet_ids      = module.vpc.private_subnets
+#   instance_types  = ["t3.medium"]
 
-  scaling_config {
-    desired_size = 3
-    max_size     = 5
-    min_size     = 2
-  }
+#   scaling_config {
+#     desired_size = 3
+#     max_size     = 5
+#     min_size     = 2
+#   }
 
-  tags = {
-    "Name" = "worker-nodes"
-  }
+#   tags = {
+#     "Name" = "worker-nodes"
+#   }
 
-  remote_access {
-    ec2_ssh_key = var.PUBLIC_KEY
-    source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
-  }
+#   remote_access {
+#     ec2_ssh_key = var.PUBLIC_KEY
+#     source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
+#   }
 
-  depends_on = [
-    module.eks,
-  ]
-}
+#   depends_on = [
+#     module.eks,
+#   ]
+# }
 
-resource "aws_eks_node_group" "istio_nodes" {
-  cluster_name    = module.eks.cluster_name
-  node_role_arn   = aws_iam_role.istio_nodes.arn
-  subnet_ids      = module.vpc.private_subnets
-  instance_types  = ["t3.medium"]
+# resource "aws_eks_node_group" "istio_nodes" {
+#   cluster_name    = module.eks.cluster_name
+#   node_role_arn   = aws_iam_role.istio_nodes.arn
+#   subnet_ids      = module.vpc.private_subnets
+#   instance_types  = ["t3.medium"]
 
-  scaling_config {
-    desired_size = 3
-    max_size     = 5
-    min_size     = 2
-  }
+#   scaling_config {
+#     desired_size = 3
+#     max_size     = 5
+#     min_size     = 2
+#   }
 
-  tags = {
-    "Name" = "istio-nodes"
-  }
+#   tags = {
+#     "Name" = "istio-nodes"
+#   }
 
-  remote_access {
-    ec2_ssh_key = var.PUBLIC_KEY
-    source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
-  }
+#   remote_access {
+#     ec2_ssh_key = var.PUBLIC_KEY
+#     source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
+#   }
 
-  depends_on = [
-    module.eks,
-  ]
-}
+#   depends_on = [
+#     module.eks,
+#   ]
+# }
 
 # Install Istio using Helm
 resource "helm_release" "istio_base" {
@@ -292,7 +292,7 @@ resource "kubernetes_deployment" "app1" {
 resource "kubernetes_deployment" "app2" {
   metadata {
     name      = "app2"
-    namespace = kubernetes_namespace_v1.namespace2.metadata[0].name
+    namespace = kubernetes_namespace.namespace2.metadata[0].name
   }
 
   spec {
