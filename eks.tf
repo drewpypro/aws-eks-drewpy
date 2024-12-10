@@ -125,57 +125,115 @@ module "eks" {
   ]
 }
 
-# resource "aws_eks_node_group" "worker_nodes" {
-#   cluster_name    = module.eks.cluster_name
-#   node_role_arn   = aws_iam_role.worker_nodes.arn
-#   subnet_ids      = module.vpc.private_subnets
-#   instance_types  = ["t3.medium"]
 
-#   scaling_config {
-#     desired_size = 3
-#     max_size     = 5
-#     min_size     = 2
-#   }
+resource "aws_iam_role" "worker_nodes" {
+  name               = "worker-nodes-role"
+  assume_role_policy = data.aws_iam_policy_document.eks_assume_role_policy.json
 
-#   tags = {
-#     "Name" = "worker-nodes"
-#   }
+  tags = {
+    Name = "worker-nodes-role"
+  }
+}
 
-#   remote_access {
-#     ec2_ssh_key = var.PUBLIC_KEY
-#     source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
-#   }
+resource "aws_iam_role" "istio_nodes" {
+  name               = "istio-nodes-role"
+  assume_role_policy = data.aws_iam_policy_document.eks_assume_role_policy.json
 
-#   depends_on = [
-#     module.eks,
-#   ]
-# }
+  tags = {
+    Name = "istio-nodes-role"
+  }
+}
 
-# resource "aws_eks_node_group" "istio_nodes" {
-#   cluster_name    = module.eks.cluster_name
-#   node_role_arn   = aws_iam_role.istio_nodes.arn
-#   subnet_ids      = module.vpc.private_subnets
-#   instance_types  = ["t3.medium"]
+data "aws_iam_policy_document" "eks_assume_role_policy" {
+  statement {
+    effect = "Allow"
 
-#   scaling_config {
-#     desired_size = 3
-#     max_size     = 5
-#     min_size     = 2
-#   }
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
 
-#   tags = {
-#     "Name" = "istio-nodes"
-#   }
+    actions = ["sts:AssumeRole"]
+  }
+}
 
-#   remote_access {
-#     ec2_ssh_key = var.PUBLIC_KEY
-#     source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
-#   }
+resource "aws_iam_policy_attachment" "worker_eks_policy" {
+  name       = "worker-eks-policy"
+  roles      = [aws_iam_role.worker_nodes.name]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
 
-#   depends_on = [
-#     module.eks,
-#   ]
-# }
+resource "aws_iam_policy_attachment" "worker_ec2_container_registry_policy" {
+  name       = "worker-ec2-container-registry-policy"
+  roles      = [aws_iam_role.worker_nodes.name]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_policy_attachment" "istio_eks_policy" {
+  name       = "istio-eks-policy"
+  roles      = [aws_iam_role.istio_nodes.name]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_policy_attachment" "istio_ec2_container_registry_policy" {
+  name       = "istio-ec2-container-registry-policy"
+  roles      = [aws_iam_role.istio_nodes.name]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+
+
+resource "aws_eks_node_group" "worker_nodes" {
+  cluster_name    = module.eks.cluster_name
+  node_role_arn   = aws_iam_role.worker_nodes.arn
+  subnet_ids      = module.vpc.private_subnets
+  instance_types  = ["t3.medium"]
+
+  scaling_config {
+    desired_size = 3
+    max_size     = 5
+    min_size     = 2
+  }
+
+  tags = {
+    "Name" = "worker-nodes"
+  }
+
+  remote_access {
+    ec2_ssh_key = var.PUBLIC_KEY
+    source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
+  }
+
+  depends_on = [
+    module.eks,
+  ]
+}
+
+resource "aws_eks_node_group" "istio_nodes" {
+  cluster_name    = module.eks.cluster_name
+  node_role_arn   = aws_iam_role.istio_nodes.arn
+  subnet_ids      = module.vpc.private_subnets
+  instance_types  = ["t3.medium"]
+
+  scaling_config {
+    desired_size = 3
+    max_size     = 5
+    min_size     = 2
+  }
+
+  tags = {
+    "Name" = "istio-nodes"
+  }
+
+  remote_access {
+    ec2_ssh_key = var.PUBLIC_KEY
+    source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]]
+  }
+
+  depends_on = [
+    module.eks,
+  ]
+}
 
 # Install Istio using Helm
 resource "helm_release" "istio_base" {
@@ -292,7 +350,7 @@ resource "kubernetes_deployment" "app1" {
 resource "kubernetes_deployment" "app2" {
   metadata {
     name      = "app2"
-    namespace = kubernetes_namespace.namespace2.metadata[0].name
+    namespace = kubernetes_namespace_v1.namespace2.metadata[0].name
   }
 
   spec {
