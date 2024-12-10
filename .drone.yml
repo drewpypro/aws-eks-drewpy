@@ -39,7 +39,11 @@ steps:
         git clone $GIT_REPO_URL /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/;
       fi
 
+<<<<<<< Updated upstream
 - name: terraform-plan
+=======
+- name: terraform-apply
+>>>>>>> Stashed changes
   image: hashicorp/terraform:latest
   network_mode: br1.201
   volumes:
@@ -54,6 +58,7 @@ steps:
       from_secret: TF_VAR_SOURCE_SSH_NET
     TF_VAR_PUBLIC_KEY:
       from_secret: TF_VAR_PUBLIC_KEY
+<<<<<<< Updated upstream
   commands:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform init
@@ -77,6 +82,28 @@ steps:
 #   commands:
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
 #     - terraform apply -auto-approve
+=======
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - terraform init
+    - terraform apply -auto-approve
+
+- name: kubectl-apply
+  image: bitnami/kubectl:latest
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+  commands:
+   - ls -R /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
+   - aws eks update-kubeconfig --region  us-east-1 --name eks-drewpy
+   - kubectl wait --for=condition=Ready nodes --timeout=300s
+   - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
+   - kubectl get nodes
+>>>>>>> Stashed changes
 
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
@@ -97,6 +124,6 @@ steps:
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
 #     - terraform destroy -auto-approve
 
-trigger:
-  event:
-    - tag
+# trigger:
+#   event:
+#     - tag

@@ -3,6 +3,7 @@ provider "aws" {
   region = var.aws_region
 }
 
+<<<<<<< Updated upstream
 # VPC and Networking
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -32,74 +33,7 @@ module "vpc" {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                    = "1"
   }
-}
-
-# EKS Cluster
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
-
-  cluster_name    = var.cluster_name
-  cluster_version = var.cluster_version
-
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
-
-  # EKS Managed Node Group(s)
-  eks_managed_node_groups = {
-    # Worker nodes
-    workers = {
-      name = "worker"
-
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
-
-      min_size     = 2
-      max_size     = 2
-      desired_size = 2
-
-      labels = {
-        role = "worker"
-      }
-    }
-
-    # Istio ingress nodes
-    istio-ingress = {
-      name = "istio"
-
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
-
-      min_size     = 2
-      max_size     = 2
-      desired_size = 2
-
-      labels = {
-        role = "istio-ingress"
-      }
-
-      taints = [{
-        key    = "dedicated"
-        value  = "istio-ingress"
-        effect = "NO_SCHEDULE"
-      }]
-    }
-  }
-
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = false
-  cluster_endpoint_public_access_cidrs = var.SOURCE_SSH_NET
-
-  tags = {
-    Environment = var.environment
-  }
-}
-
-output "private_subnet_ids" {
-  description = "List of private subnet IDs"
-  value       = module.eks.private_subnet_ids
-}
-
+=======
 # Kubernetes provider configuration
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
@@ -122,6 +56,166 @@ provider "helm" {
       args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
     }
   }
+}
+
+module "security_groups" {
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.0"
+
+  vpc_id = module.vpc.vpc_id
+
+>>>>>>> Stashed changes
+}
+
+# EKS Cluster
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+<<<<<<< Updated upstream
+  version = "~> 19.0"
+=======
+  version = "~> 20.11"
+>>>>>>> Stashed changes
+
+  cluster_name    = var.cluster_name
+  cluster_version = var.cluster_version
+
+<<<<<<< Updated upstream
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+=======
+  vpc_id                                = module.vpc.vpc_id
+  subnet_ids                            = module.vpc.private_subnets
+  cluster_endpoint_public_access        = true
+  cluster_endpoint_private_access       = true
+  cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
+  cluster_additional_security_group_ids = module.security_groups.cluster_endpoint_sg.id
+
+  # Grant the Terraform caller administrative access to the cluster
+  enable_cluster_creator_admin_permissions = true
+
+  create_iam_role = true
+  #   create_iam_role = false
+  #   iam_role_arn    = aws_iam_role.eks_cluster_role.arn
+
+  eks_managed_node_group_defaults = {
+   iam_role_additional_policies = {
+     AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+   }
+  }
+
+  cluster_addons = {
+    coredns                = {}
+    kube-proxy             = {}
+    vpc-cni                = {}
+    eks-pod-identity-agent = {}
+  }
+>>>>>>> Stashed changes
+
+  # EKS Managed Node Group(s)
+  eks_managed_node_groups = {
+    # Worker nodes
+    workers = {
+      name = "worker"
+
+      instance_types = ["t3.medium"]
+      capacity_type  = "ON_DEMAND"
+
+<<<<<<< Updated upstream
+      min_size     = 2
+      max_size     = 2
+      desired_size = 2
+=======
+      min_size        = 2
+      max_size        = 2
+      desired_size    = 2
+>>>>>>> Stashed changes
+
+      labels = {
+        role = "worker"
+      }
+    }
+
+    # Istio ingress nodes
+    istio-ingress = {
+      name = "istio"
+
+      instance_types = ["t3.medium"]
+      capacity_type  = "ON_DEMAND"
+
+<<<<<<< Updated upstream
+      min_size     = 2
+      max_size     = 2
+      desired_size = 2
+=======
+      min_size        = 2
+      max_size        = 2
+      desired_size    = 2
+>>>>>>> Stashed changes
+
+      labels = {
+        role = "istio-ingress"
+      }
+
+      taints = [{
+        key    = "dedicated"
+        value  = "istio-ingress"
+        effect = "NO_SCHEDULE"
+      }]
+    }
+  }
+
+<<<<<<< Updated upstream
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_private_access = false
+  cluster_endpoint_public_access_cidrs = var.SOURCE_SSH_NET
+=======
+    node_security_group_additional_rules = {
+      ingress_15017 = {
+        description                   = "Cluster API - Istio Webhook namespace.sidecar-injector.istio.io"
+        protocol                      = "TCP"
+        from_port                     = 15017
+        to_port                       = 15017
+        type                          = "ingress"
+        source_cluster_security_group = true
+      }
+      ingress_15012 = {
+        description                   = "Cluster API to nodes ports/protocols"
+        protocol                      = "TCP"
+        from_port                     = 15012
+        to_port                       = 15012
+        type                          = "ingress"
+        source_cluster_security_group = true
+      }
+    }
+>>>>>>> Stashed changes
+
+  tags = {
+    Environment = var.environment
+  }
+<<<<<<< Updated upstream
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = module.eks.private_subnet_ids
+}
+
+# Kubernetes provider configuration
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+  }
+}
+=======
+>>>>>>> Stashed changes
+
+  depends_on = [
+    module.security_groups,
+  ]
 }
 
 # Install Istio using Helm
@@ -178,7 +272,7 @@ resource "helm_release" "istio_egress" {
 
 
 # Create Istio System Namespace
-resource "kubernetes_namespace" "istio_system" {
+resource "kubernetes_namespace_v1" "istio_system" {
   metadata {
     name = "istio-system"
   }
@@ -268,10 +362,10 @@ resource "kubernetes_deployment" "app2" {
   }
 }
 
-resource "null_resource" "apply_k8s_resources" {
-  depends_on = [module.eks]
+# resource "null_resource" "apply_k8s_resources" {
+#   depends_on = [module.eks]
 
-  provisioner "local-exec" {
-    command = "kubectl apply -f kubernetes/"
-  }
-}
+#   provisioner "local-exec" {
+#     command = "kubectl apply -f kubernetes/"
+#   }
+# }
