@@ -3,10 +3,41 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Kubernetes provider configuration
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+  }
+}
+
+# Helm provider for installing Istio
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+    }
+  }
+}
+
+module "security_groups" {
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.0"
+
+  vpc_id = module.vpc.vpc_id
+
+}
+
 # EKS Cluster
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 20.11"
 
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
@@ -16,7 +47,7 @@ module "eks" {
   cluster_endpoint_public_access        = true
   cluster_endpoint_private_access       = true
   cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
-  cluster_additional_security_group_ids = [aws_security_group.cluster_endpoint_sg.id]
+  cluster_additional_security_group_ids = module.security_groups.cluster_endpoint_sg.id
 
   # Grant the Terraform caller administrative access to the cluster
   enable_cluster_creator_admin_permissions = true
@@ -41,6 +72,7 @@ module "eks" {
 
   # EKS Managed Node Group(s)
   eks_managed_node_groups = {
+    # Worker nodes
     workers = {
       name = "worker"
 
@@ -50,14 +82,13 @@ module "eks" {
       min_size        = 2
       max_size        = 2
       desired_size    = 2
-      security_groups = [aws_security_group.worker_node_sg.id]
-      #   iam_role_arn    = aws_iam_role.eks_node_role.arn
 
       labels = {
         role = "worker"
       }
     }
 
+    # Istio ingress nodes
     istio-ingress = {
       name = "istio"
 
@@ -67,9 +98,6 @@ module "eks" {
       min_size        = 2
       max_size        = 2
       desired_size    = 2
-      security_groups = [aws_security_group.istio_node_sg.id]
-      #   iam_role_arn    = aws_iam_role.eks_node_role.arn
-
 
       labels = {
         role = "istio-ingress"
@@ -83,33 +111,32 @@ module "eks" {
     }
   }
 
+    node_security_group_additional_rules = {
+      ingress_15017 = {
+        description                   = "Cluster API - Istio Webhook namespace.sidecar-injector.istio.io"
+        protocol                      = "TCP"
+        from_port                     = 15017
+        to_port                       = 15017
+        type                          = "ingress"
+        source_cluster_security_group = true
+      }
+      ingress_15012 = {
+        description                   = "Cluster API to nodes ports/protocols"
+        protocol                      = "TCP"
+        from_port                     = 15012
+        to_port                       = 15012
+        type                          = "ingress"
+        source_cluster_security_group = true
+      }
+    }
+
   tags = {
     Environment = var.environment
   }
-}
 
-# Kubernetes provider configuration
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
-  }
-}
-
-# Helm provider for installing Istio
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
-    }
-  }
+  depends_on = [
+    module.security_groups,
+  ]
 }
 
 # Install Istio using Helm
@@ -166,7 +193,7 @@ resource "helm_release" "istio_egress" {
 
 
 # Create Istio System Namespace
-resource "kubernetes_namespace" "istio_system" {
+resource "kubernetes_namespace_v1" "istio_system" {
   metadata {
     name = "istio-system"
   }
@@ -256,10 +283,10 @@ resource "kubernetes_deployment" "app2" {
   }
 }
 
-resource "null_resource" "apply_k8s_resources" {
-  depends_on = [module.eks]
+# resource "null_resource" "apply_k8s_resources" {
+#   depends_on = [module.eks]
 
-  provisioner "local-exec" {
-    command = "kubectl apply -f kubernetes/"
-  }
-}
+#   provisioner "local-exec" {
+#     command = "kubectl apply -f kubernetes/"
+#   }
+# }
