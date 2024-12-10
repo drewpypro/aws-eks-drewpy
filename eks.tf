@@ -114,7 +114,7 @@ module "eks" {
   #       effect = "NO_SCHEDULE"
   #     }]
   #   }
-  # }
+ }
 
   tags = {
     Environment = var.environment
