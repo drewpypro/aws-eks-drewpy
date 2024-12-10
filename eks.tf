@@ -235,149 +235,149 @@ resource "aws_eks_node_group" "istio_nodes" {
   ]
 }
 
-# Install Istio using Helm
-resource "helm_release" "istio_base" {
-  name       = "istio-base"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "base"
-  namespace  = "istio-system"
+# # Install Istio using Helm
+# resource "helm_release" "istio_base" {
+#   name       = "istio-base"
+#   repository = "https://istio-release.storage.googleapis.com/charts"
+#   chart      = "base"
+#   namespace  = "istio-system"
 
-  depends_on = [
-    module.eks,
-    kubernetes_namespace_v1.istio_system
-  ]
-}
+#   depends_on = [
+#     module.eks,
+#     kubernetes_namespace_v1.istio_system
+#   ]
+# }
 
-resource "helm_release" "istiod" {
-  name       = "istiod"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "istiod"
-  namespace  = "istio-system"
+# resource "helm_release" "istiod" {
+#   name       = "istiod"
+#   repository = "https://istio-release.storage.googleapis.com/charts"
+#   chart      = "istiod"
+#   namespace  = "istio-system"
 
-  depends_on = [
-    module.eks,
-    kubernetes_namespace_v1.istio_system
-  ]
-}
+#   depends_on = [
+#     module.eks,
+#     kubernetes_namespace_v1.istio_system
+#   ]
+# }
 
-# Install Istio ingress gateway
-resource "helm_release" "istio_ingress" {
-  name       = "istio-ingressgateway"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "gateway"
-  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
+# # Install Istio ingress gateway
+# resource "helm_release" "istio_ingress" {
+#   name       = "istio-ingressgateway"
+#   repository = "https://istio-release.storage.googleapis.com/charts"
+#   chart      = "gateway"
+#   namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
 
-  set {
-    name  = "gateways.istio-ingressgateway.enabled"
-    value = "true"
-  }
-  depends_on = [helm_release.istiod]
-}
+#   set {
+#     name  = "gateways.istio-ingressgateway.enabled"
+#     value = "true"
+#   }
+#   depends_on = [helm_release.istiod]
+# }
 
-# Install Istio egress gateway
-resource "helm_release" "istio_egress" {
-  name       = "istio-egressgateway"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "gateway"
-  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
-  set {
-    name  = "gateways.istio-egressgateway.enabled"
-    value = "true"
-  }
-  depends_on = [helm_release.istiod]
-}
+# # Install Istio egress gateway
+# resource "helm_release" "istio_egress" {
+#   name       = "istio-egressgateway"
+#   repository = "https://istio-release.storage.googleapis.com/charts"
+#   chart      = "gateway"
+#   namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
+#   set {
+#     name  = "gateways.istio-egressgateway.enabled"
+#     value = "true"
+#   }
+#   depends_on = [helm_release.istiod]
+# }
 
 
-# Create Istio System Namespace
-resource "kubernetes_namespace_v1" "istio_system" {
-  metadata {
-    name = "istio-system"
-  }
-}
+# # Create Istio System Namespace
+# resource "kubernetes_namespace_v1" "istio_system" {
+#   metadata {
+#     name = "istio-system"
+#   }
+# }
 
-resource "kubernetes_namespace_v1" "namespace1" {
-  metadata {
-    name = "namespace1"
-    labels = {
-      istio-injection = "enabled"
-    }
-  }
-}
+# resource "kubernetes_namespace_v1" "namespace1" {
+#   metadata {
+#     name = "namespace1"
+#     labels = {
+#       istio-injection = "enabled"
+#     }
+#   }
+# }
 
-resource "kubernetes_namespace_v1" "namespace2" {
-  metadata {
-    name = "namespace2"
-    labels = {
-      istio-injection = "enabled"
-    }
-  }
-}
+# resource "kubernetes_namespace_v1" "namespace2" {
+#   metadata {
+#     name = "namespace2"
+#     labels = {
+#       istio-injection = "enabled"
+#     }
+#   }
+# }
 
-# Example application deployment in namespace1
-resource "kubernetes_deployment" "app1" {
-  metadata {
-    name      = "app1"
-    namespace = kubernetes_namespace_v1.namespace1.metadata[0].name
-  }
+# # Example application deployment in namespace1
+# resource "kubernetes_deployment" "app1" {
+#   metadata {
+#     name      = "app1"
+#     namespace = kubernetes_namespace_v1.namespace1.metadata[0].name
+#   }
 
-  spec {
-    replicas = 1
+#   spec {
+#     replicas = 1
 
-    selector {
-      match_labels = {
-        app = "app1"
-      }
-    }
+#     selector {
+#       match_labels = {
+#         app = "app1"
+#       }
+#     }
 
-    template {
-      metadata {
-        labels = {
-          app = "app1"
-        }
-      }
+#     template {
+#       metadata {
+#         labels = {
+#           app = "app1"
+#         }
+#       }
 
-      spec {
-        container {
-          name  = "application"
-          image = "nginx:latest"
-        }
-      }
-    }
-  }
-}
+#       spec {
+#         container {
+#           name  = "application"
+#           image = "nginx:latest"
+#         }
+#       }
+#     }
+#   }
+# }
 
-# Example application deployment in namespace2
-resource "kubernetes_deployment" "app2" {
-  metadata {
-    name      = "app2"
-    namespace = kubernetes_namespace_v1.namespace2.metadata[0].name
-  }
+# # Example application deployment in namespace2
+# resource "kubernetes_deployment" "app2" {
+#   metadata {
+#     name      = "app2"
+#     namespace = kubernetes_namespace_v1.namespace2.metadata[0].name
+#   }
 
-  spec {
-    replicas = 1
+#   spec {
+#     replicas = 1
 
-    selector {
-      match_labels = {
-        app = "app2"
-      }
-    }
+#     selector {
+#       match_labels = {
+#         app = "app2"
+#       }
+#     }
 
-    template {
-      metadata {
-        labels = {
-          app = "app2"
-        }
-      }
+#     template {
+#       metadata {
+#         labels = {
+#           app = "app2"
+#         }
+#       }
 
-      spec {
-        container {
-          name  = "application"
-          image = "nginx:latest"
-        }
-      }
-    }
-  }
-}
+#       spec {
+#         container {
+#           name  = "application"
+#           image = "nginx:latest"
+#         }
+#       }
+#     }
+#   }
+# }
 
 # resource "null_resource" "apply_k8s_resources" {
 #   depends_on = [module.eks]
