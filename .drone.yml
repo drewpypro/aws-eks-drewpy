@@ -102,5 +102,7 @@ steps:
     - terraform destroy -auto-approve
 
 trigger:
+  branch:
+  - master
   event:
-    - tag
+  - main
