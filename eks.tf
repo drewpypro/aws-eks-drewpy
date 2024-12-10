@@ -147,7 +147,7 @@ resource "helm_release" "istio_base" {
 
   depends_on = [
     module.eks,
-    kubernetes_namespacev1.istio_system
+    kubernetes_namespace_v1.istio_system
   ]
 }
 
@@ -159,7 +159,7 @@ resource "helm_release" "istiod" {
 
   depends_on = [
     module.eks,
-    kubernetes_namespacev1.istio_system
+    kubernetes_namespace_v1.istio_system
   ]
 }
 
@@ -168,7 +168,7 @@ resource "helm_release" "istio_ingress" {
   name       = "istio-ingressgateway"
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "gateway"
-  namespace  = kubernetes_namespacev1.istio_system.metadata[0].name
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
 
   set {
     name  = "gateways.istio-ingressgateway.enabled"
@@ -182,7 +182,7 @@ resource "helm_release" "istio_egress" {
   name       = "istio-egressgateway"
   repository = "https://istio-release.storage.googleapis.com/charts"
   chart      = "gateway"
-  namespace  = kubernetes_namespacev1.istio_system.metadata[0].name
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
   set {
     name  = "gateways.istio-egressgateway.enabled"
     value = "true"
