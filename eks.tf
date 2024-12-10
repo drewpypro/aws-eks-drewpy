@@ -3,29 +3,29 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Kubernetes provider configuration
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
-  }
-}
+# # Kubernetes provider configuration
+# provider "kubernetes" {
+#   host                   = module.eks.cluster_endpoint
+#   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+#   exec {
+#     api_version = "client.authentication.k8s.io/v1beta1"
+#     command     = "aws"
+#     args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+#   }
+# }
 
-# Helm provider for installing Istio
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
-    }
-  }
-}
+# # Helm provider for installing Istio
+# provider "helm" {
+#   kubernetes {
+#     host                   = module.eks.cluster_endpoint
+#     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+#     exec {
+#       api_version = "client.authentication.k8s.io/v1beta1"
+#       command     = "aws"
+#       args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+#     }
+#   }
+# }
 
 module "security_groups" {
   source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.0"
@@ -187,7 +187,7 @@ resource "aws_eks_node_group" "worker_nodes" {
   cluster_name    = module.eks.cluster_name
   node_role_arn   = aws_iam_role.worker_nodes.arn
   subnet_ids      = module.vpc.private_subnets
-  instance_types  = ["t3.medium"]
+  instance_types  = ["m5.large"]
 
   scaling_config {
     desired_size = 3
@@ -213,7 +213,7 @@ resource "aws_eks_node_group" "istio_nodes" {
   cluster_name    = module.eks.cluster_name
   node_role_arn   = aws_iam_role.istio_nodes.arn
   subnet_ids      = module.vpc.private_subnets
-  instance_types  = ["t3.medium"]
+  instance_types  = ["m5.large"]
 
   scaling_config {
     desired_size = 3
