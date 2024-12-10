@@ -58,40 +58,40 @@ module "eks" {
   #   create_iam_role = false
   #   iam_role_arn    = aws_iam_role.eks_cluster_role.arn
 
-  # eks_managed_node_group_defaults = {
-  #  iam_role_additional_policies = {
-  #    AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-  #    AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  #  }
-  # }
+  eks_managed_node_group_defaults = {
+   iam_role_additional_policies = {
+     AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+   }
+  }
 
   cluster_addons = {
-    # coredns                = {}
+    coredns                = {}
     kube-proxy             = {}
     vpc-cni                = {}
     eks-pod-identity-agent = {}
   }
 
   # Disable node group creation within the module
-  eks_managed_node_groups = {}
+  # eks_managed_node_groups = {}
 
-  # # EKS Managed Node Group(s)
-  # eks_managed_node_groups = {
-  #   # Worker nodes
-  #   workers = {
-  #     name = "worker"
+  # EKS Managed Node Group(s)
+  eks_managed_node_groups = {
+    # Worker nodes
+    workers = {
+      name = "worker"
 
-  #     instance_types = ["t3.medium"]
-  #     capacity_type  = "ON_DEMAND"
+      instance_types = ["t3.medium"]
+      capacity_type  = "ON_DEMAND"
 
-  #     min_size        = 2
-  #     max_size        = 2
-  #     desired_size    = 2
+      min_size        = 2
+      max_size        = 2
+      desired_size    = 2
 
-  #     labels = {
-  #       role = "worker"
-  #     }
-  #   }
+      labels = {
+        role = "worker"
+      }
+    }
 
   #   # Istio ingress nodes
   #   istio-ingress = {
@@ -125,23 +125,23 @@ module "eks" {
   ]
 }
 
-resource "aws_eks_addon" "coredns" {
-  cluster_name = module.eks.cluster_name
-  addon_name   = "coredns"
+# resource "aws_eks_addon" "coredns" {
+#   cluster_name = module.eks.cluster_name
+#   addon_name   = "coredns"
 
-  depends_on = [
-    aws_eks_node_group.worker_nodes
-  ]
-}
+#   depends_on = [
+#     aws_eks_node_group.worker_nodes
+#   ]
+# }
 
-resource "aws_iam_role" "worker_nodes" {
-  name               = "worker-nodes-role"
-  assume_role_policy = data.aws_iam_policy_document.eks_assume_role_policy.json
+# resource "aws_iam_role" "worker_nodes" {
+#   name               = "worker-nodes-role"
+#   assume_role_policy = data.aws_iam_policy_document.eks_assume_role_policy.json
 
-  tags = {
-    Name = "worker-nodes-role"
-  }
-}
+#   tags = {
+#     Name = "worker-nodes-role"
+#   }
+# }
 
 resource "aws_iam_role" "istio_nodes" {
   name               = "istio-nodes-role"
@@ -165,17 +165,17 @@ data "aws_iam_policy_document" "eks_assume_role_policy" {
   }
 }
 
-resource "aws_iam_policy_attachment" "worker_eks_policy" {
-  name       = "worker-eks-policy"
-  roles      = [aws_iam_role.worker_nodes.name]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-}
+# resource "aws_iam_policy_attachment" "worker_eks_policy" {
+#   name       = "worker-eks-policy"
+#   roles      = [aws_iam_role.worker_nodes.name]
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+# }
 
-resource "aws_iam_policy_attachment" "worker_ec2_container_registry_policy" {
-  name       = "worker-ec2-container-registry-policy"
-  roles      = [aws_iam_role.worker_nodes.name]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
+# resource "aws_iam_policy_attachment" "worker_ec2_container_registry_policy" {
+#   name       = "worker-ec2-container-registry-policy"
+#   roles      = [aws_iam_role.worker_nodes.name]
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+# }
 
 resource "aws_iam_policy_attachment" "istio_eks_policy" {
   name       = "istio-eks-policy"
@@ -191,31 +191,31 @@ resource "aws_iam_policy_attachment" "istio_ec2_container_registry_policy" {
 
 
 
-resource "aws_eks_node_group" "worker_nodes" {
-  cluster_name    = module.eks.cluster_name
-  node_role_arn   = aws_iam_role.worker_nodes.arn
-  subnet_ids      = module.vpc.private_subnets
-  instance_types  = ["m5.large"]
+# resource "aws_eks_node_group" "worker_nodes" {
+#   cluster_name    = module.eks.cluster_name
+#   node_role_arn   = aws_iam_role.worker_nodes.arn
+#   subnet_ids      = module.vpc.private_subnets
+#   instance_types  = ["m5.large"]
 
-  scaling_config {
-    desired_size = 3
-    max_size     = 5
-    min_size     = 2
-  }
+#   scaling_config {
+#     desired_size = 3
+#     max_size     = 5
+#     min_size     = 2
+#   }
 
-  tags = {
-    "Name" = "worker-nodes"
-  }
+#   tags = {
+#     "Name" = "worker-nodes"
+#   }
 
-  remote_access {
-    ec2_ssh_key = var.PUBLIC_KEY
-    source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
-  }
+#   remote_access {
+#     ec2_ssh_key = var.PUBLIC_KEY
+#     source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]]
+#   }
 
-  depends_on = [
-    module.eks,
-  ]
-}
+#   depends_on = [
+#     module.eks,
+#   ]
+# }
 
 resource "aws_eks_node_group" "istio_nodes" {
   cluster_name    = module.eks.cluster_name
