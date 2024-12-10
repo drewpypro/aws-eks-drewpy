@@ -81,7 +81,7 @@ module "eks" {
     workers = {
       name = "worker"
 
-      instance_types = ["t3.medium"]
+      instance_types = ["m5.large"]
       capacity_type  = "ON_DEMAND"
 
       min_size        = 2
