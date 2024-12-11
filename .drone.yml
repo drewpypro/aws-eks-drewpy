@@ -61,14 +61,19 @@ steps:
     - terraform init
     - terraform apply -auto-approve
 
-- name: aws-kubectl-apply
-  image: heyvaldemar/aws-kubectl-docker:latest
+- name: kubectl-apply
+  image: alpine:latest
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY:
       from_secret: AWS_SECRET_ACCESS_KEY
   commands:
+    - apk add --no-cache bash curl unzip git python3 py3-pip
+    - pip install awscli
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin/
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     - kubectl wait --for=condition=Ready nodes --timeout=300s
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
