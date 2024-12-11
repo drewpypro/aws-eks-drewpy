@@ -80,12 +80,12 @@ steps:
     # Configure kubectl for the cluster
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     # Wait for nodes to be ready
-    - kubectl wait --for=condition=Ready nodes --timeout=300s
+    - kubectl wait nodes --all --for=condition=Ready --timeout=300s
     # Apply manifests
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
     # Output the list of nodes
     - kubectl get nodes
-    
+
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
