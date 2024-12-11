@@ -1,37 +1,3 @@
-# Create IAM Role for the EKS Cluster
-resource "aws_iam_role" "eks_cluster_role" {
-  name               = "eks-cluster-role"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "eks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-
-  tags = {
-    Name = "eks-cluster-role"
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cluster_role_attachments" {
-  for_each = {
-    "AmazonEKSClusterPolicy"             = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-    "AmazonEKSVPCResourceController"    = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
-  }
-
-  role       = aws_iam_role.eks_cluster_role.name
-  policy_arn = each.value
-}
-
-# Create the EKS Cluster
 resource "aws_eks_cluster" "eks" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
@@ -56,7 +22,6 @@ resource "aws_eks_cluster" "eks" {
   ]
 }
 
-# Create IAM Role for Node Groups
 resource "aws_iam_role" "node_group_role" {
   name               = "eks-node-group-role"
   assume_role_policy = <<EOF
