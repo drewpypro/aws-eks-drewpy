@@ -113,7 +113,7 @@ resource "aws_eks_node_group" "istio_ingress" {
     role = "istio-ingress"
   }
 
-  taints {
+  taint {
     key    = "dedicated"
     value  = "istio-ingress"
     effect = "NO_SCHEDULE"
