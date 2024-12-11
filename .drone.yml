@@ -69,17 +69,23 @@ steps:
     AWS_SECRET_ACCESS_KEY:
       from_secret: AWS_SECRET_ACCESS_KEY
   commands:
-    - apk add --no-cache bash curl unzip git python3 py3-pip
-    - pip install awscli
+    # Install dependencies
+    - apk add --no-cache bash curl unzip python3 py3-pip
+    # Install AWS CLI
+    - pip install awscli --break-system-packages
+    # Install kubectl
     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     - chmod +x ./kubectl
     - mv ./kubectl /usr/local/bin/
+    # Configure kubectl for the cluster
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+    # Wait for nodes to be ready
     - kubectl wait --for=condition=Ready nodes --timeout=300s
+    # Apply manifests
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
+    # Output the list of nodes
     - kubectl get nodes
-
-
+    
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
