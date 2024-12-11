@@ -89,6 +89,11 @@ steps:
     - curl -L https://istio.io/downloadIstio | sh -
     - mv istio-* /usr/local/istio
     - export PATH=$PATH:/usr/local/istio/bin
+
+    # Configure kubectl for the cluster
+    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+    - export KUBECONFIG=/root/.kube/config
+
     # Generate a private key
     - openssl genrsa -out egress-gateway.key 2048
 
@@ -98,11 +103,10 @@ steps:
     # Self-sign the certificate (or use a CA to sign it)
     - openssl x509 -req -in egress-gateway.csr -signkey egress-gateway.key -out egress-gateway.crt -days 365
 
+
     # Create Kubernetes secret for the egress gateway certificate
     - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
 
-    # Configure kubectl for the cluster
-    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     # Wait for nodes to be ready
     - kubectl wait nodes --all --for=condition=Ready --timeout=300s
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
