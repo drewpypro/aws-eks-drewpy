@@ -79,6 +79,7 @@ resource "aws_eks_node_group" "workers" {
   }
 
   remote_access {
+    ec2_ssh_key = "eks-test"
     source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]] 
   }
 
@@ -110,6 +111,7 @@ resource "aws_eks_node_group" "istio_ingress" {
   }
 
   remote_access {
+    ec2_ssh_key = "eks-test"
     source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]] 
   }
 
