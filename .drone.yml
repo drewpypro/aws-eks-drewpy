@@ -61,23 +61,18 @@ steps:
     - terraform init
     - terraform apply -auto-approve
 
-- name: kubectl-apply
-  image: bitnami/kubectl:latest
+- name: aws-kubectl-apply
+  image: heyvaldemar/aws-kubectl-docker:latest
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY:
       from_secret: AWS_SECRET_ACCESS_KEY
   commands:
-  #  - ls -lta
-  #  - apt-get update && apt-get install -y curl unzip bash git
-  #  # Install AWS CLI
-  #  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  #  - unzip awscliv2.zip && ./aws/install
-   - aws eks update-kubeconfig --region  us-east-1 --name eks-drewpy
-   - kubectl wait --for=condition=Ready nodes --timeout=300s
-   - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
-   - kubectl get nodes
+    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+    - kubectl wait --for=condition=Ready nodes --timeout=300s
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/
+    - kubectl get nodes
 
 
 # - name: terraform-destroy
