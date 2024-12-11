@@ -13,5 +13,6 @@ spec:
       protocol: HTTPS
     tls:
       mode: SIMPLE
+      credentialName: egress-gateway-cert
     hosts:
     - "*"
