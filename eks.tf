@@ -137,23 +137,35 @@ resource "aws_eks_node_group" "istio_ingress" {
 resource "aws_eks_addon" "coredns" {
   cluster_name = aws_eks_cluster.eks.name
   addon_name   = "coredns"
-  depends_on   = [aws_eks_cluster.eks]
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
 
 resource "aws_eks_addon" "kube_proxy" {
   cluster_name = aws_eks_cluster.eks.name
   addon_name   = "kube-proxy"
-  depends_on   = [aws_eks_cluster.eks]
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
 
 resource "aws_eks_addon" "vpc_cni" {
   cluster_name = aws_eks_cluster.eks.name
   addon_name   = "vpc-cni"
-  depends_on   = [aws_eks_cluster.eks]
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
 
 resource "aws_eks_addon" "eks_pod_identity_agent" {
   cluster_name = aws_eks_cluster.eks.name
   addon_name   = "eks-pod-identity-agent"
-  depends_on   = [aws_eks_cluster.eks]
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
