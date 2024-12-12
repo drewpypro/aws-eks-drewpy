@@ -9,6 +9,27 @@ module "security_groups" {
 
 }
 
+resource "aws_launch_template" "worker_node_group" {
+  name_prefix   = "worker-node-group"
+  instance_type = "t3.medium"
+
+  network_interfaces {
+    security_groups = [module.security_groups.security_group_ids["worker_nodes"]]
+  }
+
+}
+
+resource "aws_launch_template" "istio_node_group" {
+  name_prefix   = "istio-node-group"
+  instance_type = "t3.medium"
+
+  network_interfaces {
+    security_groups = [module.security_groups.security_group_ids["istio_nodes"]]
+  }
+
+}
+
+
 resource "aws_eks_cluster" "eks" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
@@ -78,9 +99,9 @@ resource "aws_eks_node_group" "workers" {
     min_size     = 2
   }
 
-  remote_access {
-    ec2_ssh_key = "eks-test"
-    source_security_group_ids = [module.security_groups.security_group_ids["worker_nodes"]] 
+  launch_template {
+    id      = aws_launch_template.worker_node_group.id
+    version = "$Latest"
   }
 
   labels = {
@@ -93,7 +114,8 @@ resource "aws_eks_node_group" "workers" {
   }
 
   depends_on = [
-    aws_eks_cluster.eks
+    aws_eks_cluster.eks,
+    aws_launch_template.worker_node_group
   ]
 }
 
@@ -110,9 +132,9 @@ resource "aws_eks_node_group" "istio_ingress" {
     min_size     = 2
   }
 
-  remote_access {
-    ec2_ssh_key = "eks-test"
-    source_security_group_ids = [module.security_groups.security_group_ids["istio_nodes"]] 
+  launch_template {
+    id      = aws_launch_template.istio_node_group.id
+    version = "$Latest"
   }
 
   labels = {
@@ -131,7 +153,8 @@ resource "aws_eks_node_group" "istio_ingress" {
   }
 
   depends_on = [
-    aws_eks_cluster.eks
+    aws_eks_cluster.eks,
+    aws_launch_template.istio_node_group
   ]
 }
 
