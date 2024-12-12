@@ -33,7 +33,7 @@ aws-eks-drewpy/
     - 2 Pods with a namespace each
     - istio sidecar proxys in each pod.
 - Build Security-Groups with appropriate rules
-- Test Network connectivity
+- Test Network connectivity (ping, ssh, http)
     - ec2 to namespace1 application 
         ```
         ec2->nlb->istio-ingress->istio-proxy->namespace1
@@ -50,4 +50,10 @@ aws-eks-drewpy/
         ```
         ec2->node1
         ```
-    -ec2 to eks-api-server
+    - ec2 to eks-api-server
+    - public internet to namespace1 app
+        ```
+        home_net->nlb->istio-ingress->istio-proxy->namespace1
+        ```
+    - Cloudflare WAF to ingress istio gateway. 
+    - GWLB suricata on ingress (IDS or IPS)
