@@ -11,7 +11,6 @@ module "security_groups" {
 
 resource "aws_launch_template" "worker_node_group" {
   name_prefix   = "worker-node-group"
-  instance_type = "t3.medium"
 
   network_interfaces {
     security_groups = [module.security_groups.security_group_ids["worker_nodes"]]
@@ -21,7 +20,6 @@ resource "aws_launch_template" "worker_node_group" {
 
 resource "aws_launch_template" "istio_node_group" {
   name_prefix   = "istio-node-group"
-  instance_type = "t3.medium"
 
   network_interfaces {
     security_groups = [module.security_groups.security_group_ids["istio_nodes"]]
