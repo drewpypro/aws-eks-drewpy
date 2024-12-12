@@ -43,3 +43,19 @@ resource "aws_flow_log" "vpc_flow_log" {
   vpc_id               = module.vpc.vpc_id
   traffic_type         = "ALL"
 }
+
+resource "aws_route53_resolver_query_log_config" "query_log_config" {
+  name           = "${var.cluster_name}-dns-query-logs"
+  destination_arn = aws_cloudwatch_log_group.dns_query_log_group.arn
+}
+
+resource "aws_route53_resolver_query_log_config_association" "query_log_config_assoc" {
+  resolver_query_log_config_id = aws_route53_resolver_query_log_config.query_log_config.id
+  resource_id                  = module.vpc.vpc_id
+}
+
+resource "aws_cloudwatch_log_group" "dns_query_log_group" {
+  name              = "/aws/vpc/${var.cluster_name}-dns-query-logs"
+  retention_in_days = 1
+  skip_destroy      = false
+}
