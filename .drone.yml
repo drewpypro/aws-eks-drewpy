@@ -110,7 +110,7 @@ steps:
     # Wait for nodes to be ready
     - kubectl wait nodes --all --for=condition=Ready --timeout=300s
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
-    - istioctl install --set profile=default --skip-confirmation
+    - istioctl install --set profile=default --skip-confirmation --wait=10m
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
