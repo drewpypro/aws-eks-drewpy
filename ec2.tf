@@ -23,6 +23,7 @@ resource "aws_instance" "test_ec2" {
   })
 
   depends_on = [
+    module.vpc,
     module.security_groups,
     aws_eks_cluster.eks
   ]
