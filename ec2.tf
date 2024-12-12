@@ -1,7 +1,7 @@
 resource "aws_instance" "test_ec2" {
   ami             = "ami-09190d816c07cca00"
   instance_type   = "t2.micro"
-  subnet_id       = module.eks.private_subnet_ids[0]
+  subnet_id       = module.vpc.private_subnet_ids[0]
   vpc_security_group_ids = [module.security_groups.security_group_ids["ec2_test_sg"]]
 
   tags = {
