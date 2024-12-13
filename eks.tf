@@ -4,8 +4,8 @@ provider "aws" {
 
 locals {
   paas_subnets = [
-    var.private_subnet_cidrs["eks-a"],
-    var.private_subnet_cidrs["eks-b"]
+    module.vpc.private_subnets[0],
+    module.vpc.private_subnets[1]
   ]
 }
 
