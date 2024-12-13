@@ -39,6 +39,29 @@ steps:
         git clone $GIT_REPO_URL /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/;
       fi
 
+- name: terraform-plan
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - terraform init
+    - terraform plan
+
+
 # - name: terraform-apply
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
@@ -60,6 +83,10 @@ steps:
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
 #     - terraform init
 #     - terraform apply -auto-approve
+#     - NLB_SUBNETS=$(terraform output -json public_subnet_ids | jq -r '.[]' | paste -sd ",")
+#     - NLB_SG_ID=$(terraform output -raw internet_nlb_sg_id)
+#     - sed -i "s|nlb_sg_id|${NLB_SG_ID}|g" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/ingress-gateway-service.yaml
+#     - sed -i "s|nlb_subnet_1,nlb_subnet_2|${NLB_SUBNETS}|g" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/ingress-gateway-service.yaml
 
 # - name: kubectl-apply
 #   image: alpine:latest
@@ -118,27 +145,27 @@ steps:
 #     # Output the list of nodes
 #     - kubectl get nodes
 
-- name: terraform-destroy
-  image: hashicorp/terraform:latest
-  network_mode: br1.201
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    TF_VAR_SOURCE_SSH_NET:
-      from_secret: TF_VAR_SOURCE_SSH_NET
-    TF_VAR_PUBLIC_KEY:
-      from_secret: TF_VAR_PUBLIC_KEY
-    TF_VAR_HOME_IP:
-      from_secret: TF_VAR_HOME_IP
-  commands:
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-    - terraform init
-    - terraform destroy -auto-approve
+# - name: terraform-destroy
+#   image: hashicorp/terraform:latest
+#   network_mode: br1.201
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     TF_VAR_SOURCE_SSH_NET:
+#       from_secret: TF_VAR_SOURCE_SSH_NET
+#     TF_VAR_PUBLIC_KEY:
+#       from_secret: TF_VAR_PUBLIC_KEY
+#     TF_VAR_HOME_IP:
+#       from_secret: TF_VAR_HOME_IP
+#   commands:
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+#     - terraform init
+#     - terraform destroy -auto-approve
 
 trigger:
   branch:

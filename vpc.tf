@@ -7,27 +7,47 @@ module "vpc" {
   cidr = var.vpc_cidr
 
   azs             = var.availability_zones
-  private_subnets = var.private_subnet_cidrs
-  public_subnets  = var.public_subnet_cidrs
+  private_subnets = [
+    var.private_subnet_cidrs["eks-a"],
+    var.private_subnet_cidrs["eks-b"],
+    var.private_subnet_cidrs["general-a"],
+    var.private_subnet_cidrs["general-b"],
+    var.private_subnet_cidrs["endpoint-a"],
+    var.private_subnet_cidrs["endpoint-b"]
+  ]
+
+  public_subnets = [
+    var.public_subnet_cidrs["internet-nlb-a"],
+    var.public_subnet_cidrs["internet-nlb-b"]
+  ]
 
   enable_nat_gateway   = true
   single_nat_gateway   = false
   enable_dns_hostnames = true
   enable_flow_log      = false
 
-  tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    }
+  )
 
-  private_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"           = "1"
-  }
+  private_subnet_tags = merge(
+    var.common_tags,
+    {
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+      "kubernetes.io/role/internal-elb"           = "1"
+    }
+  )
 
-  public_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                    = "1"
-  }
+  public_subnet_tags = merge(
+    var.common_tags,
+    {
+      "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+      "kubernetes.io/role/elb"                    = "1"
+    }
+  )
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
@@ -59,3 +79,4 @@ resource "aws_cloudwatch_log_group" "dns_query_log_group" {
   retention_in_days = 1
   skip_destroy      = false
 }
+
