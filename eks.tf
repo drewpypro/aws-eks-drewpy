@@ -9,6 +9,10 @@ module "security_groups" {
 
 }
 
+output "internet_nlb_sg_id" {
+  value = module.security_groups.security_group_ids["internet_nlb"]
+}
+
 resource "aws_launch_template" "worker_node_group" {
   name_prefix   = "worker-node-group"
 
@@ -16,8 +20,16 @@ resource "aws_launch_template" "worker_node_group" {
     security_groups = [module.security_groups.security_group_ids["worker_nodes"]]
   }
 
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(
+      var.common_tags,
+      {
+        "Name" = "worker-node"
+      }
+    )
+  }
 }
-
 resource "aws_launch_template" "istio_node_group" {
   name_prefix   = "istio-node-group"
 
@@ -25,6 +37,15 @@ resource "aws_launch_template" "istio_node_group" {
     security_groups = [module.security_groups.security_group_ids["istio_nodes"]]
   }
 
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(
+      var.common_tags,
+      {
+        "Name" = "istio-node"
+      }
+    )
+  }
 }
 
 
@@ -42,9 +63,12 @@ resource "aws_eks_cluster" "eks" {
 
   version = var.cluster_version
 
-  tags = {
-    Environment = var.environment
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = var.cluster_name
+    }
+  )
 
   depends_on = [
     module.security_groups
@@ -106,10 +130,12 @@ resource "aws_eks_node_group" "workers" {
     role = "worker"
   }
 
-  tags = {
-    Environment = var.environment
-    Name        = "worker-node-group"
-  }
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "worker-node-group"
+    }
+  )
 
   depends_on = [
     aws_eks_cluster.eks,
@@ -145,11 +171,12 @@ resource "aws_eks_node_group" "istio_ingress" {
     effect = "NO_SCHEDULE"
   }
 
-  tags = {
-    Environment = var.environment
-    Name        = "istio-ingress-node-group"
-  }
-
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "istio-ingress-node-group"
+    }
+  )
   depends_on = [
     aws_eks_cluster.eks,
     aws_launch_template.istio_node_group
