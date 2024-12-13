@@ -4,13 +4,13 @@ provider "aws" {
 
 locals {
   paas_subnets = [
-    var.private_subnet_cidrs["eks-a"],
-    var.private_subnet_cidrs["eks-b"]
+    module.vpc.private_subnets[0],
+    module.vpc.private_subnets[1]
   ]
 }
 
 module "security_groups" {
-  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.9"
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.10"
 
   vpc_id = module.vpc.vpc_id
 
