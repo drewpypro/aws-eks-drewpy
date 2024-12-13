@@ -76,7 +76,7 @@ variable "common_tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
   default = {
-    "Environment" = "Production"
-    "Owner"       = "Team XYZ"
+    "Environment" = "drewpy-dev"
+    "Provisioner_Repo"        = "https://github.com/drewpypro/aws-eks-drewpy"
   }
 }
