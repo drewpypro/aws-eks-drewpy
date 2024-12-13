@@ -2,6 +2,13 @@ provider "aws" {
   region = var.aws_region
 }
 
+locals {
+  paas_subnets = [
+    var.private_subnet_cidrs["eks-a"],
+    var.private_subnet_cidrs["eks-b"]
+  ]
+}
+
 module "security_groups" {
   source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.9"
 
@@ -54,7 +61,7 @@ resource "aws_eks_cluster" "eks" {
   role_arn = aws_iam_role.eks_cluster_role.arn
 
   vpc_config {
-    subnet_ids         = module.vpc.private_subnets
+    subnet_ids         = local.paas_subnets
     endpoint_public_access = true
     endpoint_private_access = true
     public_access_cidrs    = var.SOURCE_SSH_NET
@@ -112,7 +119,7 @@ resource "aws_iam_role_policy_attachment" "node_group_role_attachments" {
 resource "aws_eks_node_group" "workers" {
   cluster_name    = aws_eks_cluster.eks.name
   node_role_arn   = aws_iam_role.node_group_role.arn
-  subnet_ids      = module.vpc.private_subnets
+  subnet_ids      = local.paas_subnets
   instance_types  = ["t3.medium"]
 
   scaling_config {
@@ -147,7 +154,7 @@ resource "aws_eks_node_group" "workers" {
 resource "aws_eks_node_group" "istio_ingress" {
   cluster_name    = aws_eks_cluster.eks.name
   node_role_arn   = aws_iam_role.node_group_role.arn
-  subnet_ids      = module.vpc.private_subnets
+  subnet_ids      = local.paas_subnets
   instance_types  = ["t3.medium"]
 
   scaling_config {
