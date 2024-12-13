@@ -22,7 +22,7 @@ module "vpc" {
   ]
 
   enable_nat_gateway   = true
-  single_nat_gateway   = false
+  single_nat_gateway   = true
   enable_dns_hostnames = true
   enable_flow_log      = false
 
@@ -51,7 +51,7 @@ module "vpc" {
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
-  name              = "/aws/vpc/${var.cluster_name}-flow-logs"
+  name              = "/aws/vpc/${var.cluster_name}-vpc-flow-logs"
   retention_in_days = 1
   skip_destroy      = false
 }
