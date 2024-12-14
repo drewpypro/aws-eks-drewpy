@@ -50,6 +50,16 @@ module "vpc" {
   )
 }
 
+output "public_subnet_ids" {
+  description = "List of public subnet IDs"
+  value       = module.vpc.public_subnets
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = module.vpc.private_subnets
+}
+
 resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
   name              = "/aws/vpc/${var.cluster_name}-vpc-flow-logs"
   retention_in_days = 1
