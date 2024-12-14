@@ -26,12 +26,13 @@ aws-eks-drewpy/
 
 # TO DO
 - Istio Created NLB security-group rules
+- SG rules on cluster endpoint and ELB
 - ArgoCD integration
 
 
 # References
  - [Control Plane SG](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest#input_cluster_additional_security_group_ids)
- - aws s3 cp s3://logstorebucket/exportedlogs/ ./exportedlogs --recursive
+
 # Goals
 - Build EKS cluster
     - 2 worker nodes
@@ -138,14 +139,15 @@ Step 8: Check Logs
 
 kubectl describe nodes
 
-kubectl describe nodes ip-10-0-1-116.ec2.internal
-kubectl describe nodes ip-10-0-1-122.ec2.internal
-kubectl describe nodes ip-10-0-2-110.ec2.internal
-kubectl describe nodes ip-10-0-2-209.ec2.internal
+kubectl describe nodes ip-10-0-1-190.ec2.internal
+kubectl describe nodes ip-10-0-1-249.ec2.internal
+kubectl describe nodes ip-10-0-2-109.ec2.internal
+kubectl describe nodes ip-10-0-2-109.ec2.internal
 
-
+aws s3 cp s3://logstorebucket/ ./exportedlogs --recursive
 find exportedlogs/ -name "*.gz" -exec gunzip {} \;
-find 57c5917c-a76d-410c-b5e4-6d8bfcd974ff/ -exec cat {} + > dns_queries.csv
+find exportedlogs/dnsquerylogs/* -exec cat {} + > dnsqueries.csv
+find exportedlogs/vpcflowlogs/* -exec cat {} + > vpcflowlogs.csv
 find exportedlogs/ -exec cat {} + > flow_logs.csv
 
 ```
