@@ -5,7 +5,7 @@ data "aws_autoscaling_group" "istio_ingress_asg" {
 data "aws_instances" "istio_ingress_instances" {
   filter {
     name   = "instance-id"
-    values = data.aws_autoscaling_group.istio_ingress_asg.instances[*].id
+    values = [data.aws_autoscaling_group.istio_ingress_asg.name]
   }
 }
 
