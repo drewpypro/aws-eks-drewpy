@@ -102,11 +102,6 @@ steps:
   commands:
     # Install dependencies
     - apk add --no-cache bash curl unzip python3 py3-pip git openssl
-    - if [ -d /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/.git ]; then
-        cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/ && git fetch && git reset --hard origin/main;
-      else
-        git clone $GIT_REPO_URL /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/;
-      fi
     # Install AWS CLI
     - pip install awscli --break-system-packages
     # Install kubectl
