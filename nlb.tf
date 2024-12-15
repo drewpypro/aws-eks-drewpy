@@ -90,13 +90,13 @@ resource "aws_lb_listener" "istio_https_listener" {
 resource "aws_lb_target_group_attachment" "istio_http_attachment" {
   for_each         = toset(data.aws_instances.istio_ingress_instances.ids)
   target_group_arn = aws_lb_target_group.istio_http_tg.arn
-  target_id        = each.value
+  target_id        = each.key
   port             = 30080
 }
 
 resource "aws_lb_target_group_attachment" "istio_https_attachment" {
   for_each         = toset(data.aws_instances.istio_ingress_instances.ids)
   target_group_arn = aws_lb_target_group.istio_https_tg.arn
-  target_id        = each.value
+  target_id        = each.key
   port             = 30443
 }
