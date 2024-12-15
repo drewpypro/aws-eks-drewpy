@@ -108,7 +108,7 @@ steps:
     - apk --no-cache list bash curl unzip python3 py3-pip git openssl > /dev/null 2>&1 || apk add --no-cache bash curl unzip python3 py3-pip git openssl
 
     # Install AWS CLI if not already installed
-    - which aws || pip install awscli --break-system-packages
+    - which aws || pip3 install awscli --break-system-packages
 
     # Install kubectl if not already present
     - which kubectl || (curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x ./kubectl && mv ./kubectl /usr/local/bin/)
