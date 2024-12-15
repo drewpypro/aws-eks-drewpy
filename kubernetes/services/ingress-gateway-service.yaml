@@ -4,8 +4,8 @@ metadata:
   name: istio-ingressgateway
   namespace: istio-system
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-extra-security-groups: "nlb_sg_id"
-    service.beta.kubernetes.io/aws-load-balancer-subnets: "nlb_subnet_1,nlb_subnet_2"
+    service.beta.kubernetes.io/aws-load-balancer-extra-security-groups: "sg-087aee6c3b7000396"
+    service.beta.kubernetes.io/aws-load-balancer-subnets: "subnet-090dbfa86511370ba,subnet-0942dd9c1c29faeaa"
 spec:
   selector:
     app: istio-ingressgateway
