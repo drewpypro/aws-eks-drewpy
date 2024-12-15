@@ -121,13 +121,13 @@ steps:
     - export KUBECONFIG=/root/.kube/config
 
     # Generate a private key only if it does not exist
-    - [ -f egress-gateway.key ] || openssl genrsa -out egress-gateway.key 2048
+    - bash -c "[ -f egress-gateway.key ] || openssl genrsa -out egress-gateway.key 2048"
 
     # Generate a certificate signing request (CSR) only if it does not exist
-    - [ -f egress-gateway.csr ] || openssl req -new -key egress-gateway.key -out egress-gateway.csr -subj "/CN=egress-gateway/O=example"
+    - bash -c "[ -f egress-gateway.csr ] || openssl req -new -key egress-gateway.key -out egress-gateway.csr -subj '/CN=egress-gateway/O=example'"
 
     # Self-sign the certificate (or use a CA to sign it) if it doesn't exist
-    - [ -f egress-gateway.crt ] || openssl x509 -req -in egress-gateway.csr -signkey egress-gateway.key -out egress-gateway.crt -days 365
+    - bash -c "[ -f egress-gateway.crt ] || openssl x509 -req -in egress-gateway.csr -signkey egress-gateway.key -out egress-gateway.crt -days 365"
 
    # Create Kubernetes secret for the egress gateway certificate
     - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
