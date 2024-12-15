@@ -86,8 +86,12 @@ steps:
     - terraform apply -auto-approve
     - NLB_SUBNETS=$(terraform output -json public_subnet_ids | jq -r '.[]' | paste -sd ",")
     - NLB_SG_ID=$(terraform output -raw internet_nlb_sg_id)
+    - echo $NLB_SUBNETS
+    - echo $NLB_SG_ID
     - sed -i "s|nlb_sg_id|${NLB_SG_ID}|g" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/ingress-gateway-service.yaml
     - sed -i "s|nlb_subnet_1,nlb_subnet_2|${NLB_SUBNETS}|g" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/ingress-gateway-service.yaml
+    - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/ingress-gateway-service.yaml
+
 
 - name: kubectl-apply
   image: alpine:latest
