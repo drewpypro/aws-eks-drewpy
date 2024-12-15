@@ -16,10 +16,6 @@ module "security_groups" {
 
 }
 
-output "internet_nlb_sg_id" {
-  value = module.security_groups.security_group_ids["internet_nlb"]
-}
-
 resource "aws_launch_template" "worker_node_group" {
   name_prefix   = "worker-node-group"
 

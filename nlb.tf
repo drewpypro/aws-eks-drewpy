@@ -15,7 +15,7 @@ resource "aws_lb" "istio_ingress_nlb" {
   load_balancer_type = "network"
   subnets            = [module.vpc.public_subnets[0], module.vpc.public_subnets[1]]
   enable_deletion_protection = false
-
+  security_groups = [module.security_groups.security_group_ids["internet_nlb"]]
   tags = {
     Name = "istio-ingress-nlb"
   }
