@@ -4,13 +4,15 @@ data "aws_autoscaling_group" "istio_ingress_asg" {
 
 data "aws_instances" "istio_ingress_instances" {
   filter {
-    name   = "tag:eks:nodegroup-name"
-    values = [aws_eks_node_group.istio_ingress.node_group_name]
+    name   = "tag:Name"
+    values = ["istio-node"]
   }
-  filter {
-    name   = "instance-state-name"
-    values = ["running"]
-  }
+
+  depends_on = [
+    aws_eks_cluster.eks,
+    aws_launch_template.worker_node_group
+  ]
+
 }
 
 resource "aws_lb" "istio_ingress_nlb" {
@@ -23,6 +25,11 @@ resource "aws_lb" "istio_ingress_nlb" {
   tags = {
     Name = "istio-ingress-nlb"
   }
+
+  depends_on = [
+    aws_eks_cluster.eks,
+    aws_launch_template.worker_node_group
+  ]
 }
 
 resource "aws_lb_target_group" "istio_http_tg" {
