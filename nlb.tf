@@ -1,5 +1,5 @@
 data "aws_autoscaling_group" "istio_ingress_asg" {
-  name = aws_eks_node_group.istio_ingress.resources[0].auto_scaling_group_name
+  name = aws_eks_node_group.istio_ingress.resources[0].autoscaling_groups[0].name
 }
 
 data "aws_instances" "istio_ingress_instances" {
