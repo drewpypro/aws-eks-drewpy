@@ -1,0 +1,248 @@
+ kubectl get nodes
+NAME                         STATUS   ROLES    AGE    VERSION
+ip-10-0-1-127.ec2.internal   Ready    <none>   124m   v1.31.3-eks-59bf375
+ip-10-0-1-16.ec2.internal    Ready    <none>   124m   v1.31.3-eks-59bf375
+ip-10-0-2-205.ec2.internal   Ready    <none>   124m   v1.31.3-eks-59bf375
+ip-10-0-2-61.ec2.internal    Ready    <none>   124m   v1.31.3-eks-59bf375
+
+ kubectl get namespaces
+NAME              STATUS   AGE
+default           Active   132m
+istio-system      Active   118m
+kube-node-lease   Active   132m
+kube-public       Active   132m
+kube-system       Active   132m
+namespace1        Active   118m
+namespace2        Active   118m
+
+ kubectl get pods
+No resources found in default namespace.
+
+ kubectl get pods -n istio-system
+NAME                                    READY   STATUS    RESTARTS   AGE
+istio-ingressgateway-5f9df778cc-sdwkt   1/1     Running   0          118m
+istiod-69d6bb74c-gv5fb                  1/1     Running   0          118m
+
+ kubectl get pods -n namespace1
+NAME                   READY   STATUS    RESTARTS   AGE
+app1-54f97987d-bzft5   2/2     Running   0          118m
+
+ kubectl get pods -n namespace2
+NAME                   READY   STATUS    RESTARTS   AGE
+app2-d76cf49df-mmlqz   2/2     Running   0          118m
+
+ kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   172.20.0.1   <none>        443/TCP   133m
+
+ kubectl get svc -n istio-system
+NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                                      AGE
+istio-ingressgateway   NodePort    172.20.81.8    <none>        15021:30296/TCP,80:30080/TCP,443:30443/TCP   118m
+istiod                 ClusterIP   172.20.9.234   <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP        119m
+
+ kubectl describe svc istio-ingressgateway -n istio-system
+Name:                     istio-ingressgateway
+Namespace:                istio-system
+Labels:                   app=istio-ingressgateway
+                          app.kubernetes.io/instance=istio
+                          app.kubernetes.io/managed-by=Helm
+                          app.kubernetes.io/name=istio-ingressgateway
+                          app.kubernetes.io/part-of=istio
+                          app.kubernetes.io/version=1.24.1
+                          helm.sh/chart=istio-ingress-1.24.1
+                          install.operator.istio.io/owning-resource=unknown
+                          install.operator.istio.io/owning-resource-namespace=istio-system
+                          istio=ingressgateway
+                          istio.io/rev=default
+                          operator.istio.io/component=IngressGateways
+                          operator.istio.io/managed=Reconcile
+                          operator.istio.io/version=1.24.1
+                          release=istio
+Annotations:              <none>
+Selector:                 app=istio-ingressgateway,istio=ingressgateway
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       172.20.81.8
+IPs:                      172.20.81.8
+Port:                     status-port  15021/TCP
+TargetPort:               15021/TCP
+NodePort:                 status-port  30296/TCP
+Endpoints:                10.0.2.107:15021
+Port:                     http  80/TCP
+TargetPort:               80/TCP
+NodePort:                 http  30080/TCP
+Endpoints:                10.0.2.107:80
+Port:                     https  443/TCP
+TargetPort:               443/TCP
+NodePort:                 https  30443/TCP
+Endpoints:                10.0.2.107:443
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:
+  Type    Reason                Age                  From                Message
+  ----    ------                ----                 ----                -------
+  Normal  EnsuringLoadBalancer  16m (x15 over 118m)  service-controller  Ensuring load balancer
+  Normal  EnsuredLoadBalancer   16m (x8 over 118m)   service-controller  Ensured load balancer
+  Normal  Type                  16m                  service-controller  LoadBalancer -> NodePort
+  Normal  DeletedLoadBalancer   16m                  service-controller  Deleted load balancer
+
+
+ kubectl describe svc istiod -n istio-system
+Name:              istiod
+Namespace:         istio-system
+Labels:            app=istiod
+                   app.kubernetes.io/instance=istio
+                   app.kubernetes.io/managed-by=Helm
+                   app.kubernetes.io/name=istiod
+                   app.kubernetes.io/part-of=istio
+                   app.kubernetes.io/version=1.24.1
+                   helm.sh/chart=istiod-1.24.1
+                   install.operator.istio.io/owning-resource=unknown
+                   install.operator.istio.io/owning-resource-namespace=istio-system
+                   istio=pilot
+                   istio.io/rev=default
+                   operator.istio.io/component=Pilot
+                   operator.istio.io/managed=Reconcile
+                   operator.istio.io/version=1.24.1
+                   release=istio
+Annotations:       <none>
+Selector:          app=istiod,istio=pilot
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                172.20.9.234
+IPs:               172.20.9.234
+Port:              grpc-xds  15010/TCP
+TargetPort:        15010/TCP
+Endpoints:         10.0.1.6:15010
+Port:              https-dns  15012/TCP
+TargetPort:        15012/TCP
+Endpoints:         10.0.1.6:15012
+Port:              https-webhook  443/TCP
+TargetPort:        15017/TCP
+Endpoints:         10.0.1.6:15017
+Port:              http-monitoring  15014/TCP
+TargetPort:        15014/TCP
+Endpoints:         10.0.1.6:15014
+Session Affinity:  None
+Events:            <none>
+
+
+ kubectl get gateway -n namespace1
+No resources found in namespace1 namespace.
+
+
+ kubectl describe gateway egress-gateway -n istio-system
+Name:         egress-gateway
+Namespace:    istio-system
+Labels:       <none>
+Annotations:  <none>
+API Version:  networking.istio.io/v1
+Kind:         Gateway
+Metadata:
+  Creation Timestamp:  2024-12-15T16:19:31Z
+  Generation:          1
+  Resource Version:    3480
+  UID:                 976748c0-0264-4d11-874e-7f4e55609a4e
+Spec:
+  Selector:
+    Istio:  egressgateway
+  Servers:
+    Hosts:
+      *
+    Port:
+      Name:      https
+      Number:    443
+      Protocol:  HTTPS
+    Tls:
+      Credential Name:  egress-gateway-cert
+      Mode:             SIMPLE
+Events:                 <none>
+
+
+ kubectl describe gateway ingress-gateway -n istio-system
+Name:         ingress-gateway
+Namespace:    istio-system
+Labels:       <none>
+Annotations:  <none>
+API Version:  networking.istio.io/v1
+Kind:         Gateway
+Metadata:
+  Creation Timestamp:  2024-12-15T16:19:31Z
+  Generation:          1
+  Resource Version:    3483
+  UID:                 434180dd-35f0-432e-87be-7e93bdff9282
+Spec:
+  Selector:
+    Istio:  ingressgateway
+  Servers:
+    Hosts:
+      *
+    Port:
+      Name:      http
+      Number:    80
+      Protocol:  HTTP
+Events:          <none>
+
+
+ kubectl get virtualservice -n namespace1
+NAME                       GATEWAYS              HOSTS   AGE
+service1-virtual-service   ["ingress-gateway"]   ["*"]   119m
+
+
+ kubectl get virtualservice -n namespace2
+NAME                       GATEWAYS              HOSTS   AGE
+service2-virtual-service   ["ingress-gateway"]   ["*"]   119m
+
+
+ kubectl describe virtualservice service1-virtual-service -n namespace1
+Name:         service1-virtual-service
+Namespace:    namespace1
+Labels:       <none>
+Annotations:  <none>
+API Version:  networking.istio.io/v1
+Kind:         VirtualService
+Metadata:
+  Creation Timestamp:  2024-12-15T16:19:32Z
+  Generation:          1
+  Resource Version:    3496
+  UID:                 86b2cc2e-08cf-4035-a7b5-48c19e1b731e
+Spec:
+  Gateways:
+    ingress-gateway
+  Hosts:
+    *
+  Http:
+    Route:
+      Destination:
+        Host:  app1
+        Port:
+          Number:  80
+Events:            <none>
+
+
+ kubectl describe virtualservice service2-virtual-service -n namespace2
+Name:         service2-virtual-service
+Namespace:    namespace2
+Labels:       <none>
+Annotations:  <none>
+API Version:  networking.istio.io/v1
+Kind:         VirtualService
+Metadata:
+  Creation Timestamp:  2024-12-15T16:19:32Z
+  Generation:          1
+  Resource Version:    3497
+  UID:                 64220f31-123b-4b22-8d90-b5e74daf849a
+Spec:
+  Gateways:
+    ingress-gateway
+  Hosts:
+    *
+  Http:
+    Route:
+      Destination:
+        Host:  app2
+        Port:
+          Number:  80
+Events:            <none>
