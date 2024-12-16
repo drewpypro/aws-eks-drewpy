@@ -41,8 +41,9 @@ resource "aws_lb_target_group" "istio_http_tg" {
 
   health_check {
     enabled             = true
-    port                = "30080"
-    protocol            = "TCP"
+    port                = "15021"
+    protocol            = "HTTP"
+    path                = "/healthz/ready"
     interval            = 10
     timeout             = 5
     healthy_threshold   = 3
@@ -63,8 +64,9 @@ resource "aws_lb_target_group" "istio_https_tg" {
 
   health_check {
     enabled             = true
-    port                = "30443"
-    protocol            = "TCP"
+    port                = "15021"
+    protocol            = "HTTP"
+    path                = "/healthz/ready"
     interval            = 10
     timeout             = 5
     healthy_threshold   = 3
