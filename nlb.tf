@@ -1,18 +1,13 @@
-data "aws_autoscaling_group" "istio_ingress_asg" {
-  name = aws_eks_node_group.istio_ingress.resources[0].autoscaling_groups[0].name
-}
-
 data "aws_instances" "istio_ingress_instances" {
   filter {
     name   = "tag:Name"
     values = ["istio-node"]
   }
 
-  depends_on = [
-    aws_eks_cluster.eks,
-    aws_launch_template.worker_node_group
-  ]
+}
 
+locals {
+  istio_ingress_instances_map = { for id in data.aws_instances.istio_ingress_instances.ids : id => id }
 }
 
 resource "aws_lb" "istio_ingress_nlb" {
@@ -101,14 +96,14 @@ resource "aws_lb_listener" "istio_https_listener" {
 }
 
 resource "aws_lb_target_group_attachment" "istio_http_attachment" {
-  for_each         = toset(data.aws_instances.istio_ingress_instances.ids)
+  for_each         = local.istio_ingress_instances_map
   target_group_arn = aws_lb_target_group.istio_http_tg.arn
   target_id        = each.key
   port             = 30080
 }
 
 resource "aws_lb_target_group_attachment" "istio_https_attachment" {
-  for_each         = toset(data.aws_instances.istio_ingress_instances.ids)
+  for_each         = local.istio_ingress_instances_map
   target_group_arn = aws_lb_target_group.istio_https_tg.arn
   target_id        = each.key
   port             = 30443
