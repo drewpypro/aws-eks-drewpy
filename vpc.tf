@@ -65,7 +65,7 @@ resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
   retention_in_days = 1
   skip_destroy      = false
   
-  depends_on = [aws_flow_log.vpc_flow_log]
+  depends_on = [module.vpc]
 }
 
 resource "aws_flow_log" "vpc_flow_log" {
@@ -74,6 +74,8 @@ resource "aws_flow_log" "vpc_flow_log" {
   iam_role_arn         = aws_iam_role.flow_logs_role.arn
   vpc_id               = module.vpc.vpc_id
   traffic_type         = "ALL"
+
+  depends_on = [aws_cloudwatch_log_group.vpc_flow_log_group]
 
 }
 
