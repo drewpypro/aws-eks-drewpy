@@ -36,7 +36,7 @@ resource "aws_lb_target_group" "istio_http_tg" {
 
   health_check {
     enabled             = true
-    port                = "15021"
+    port                = "31170"
     protocol            = "HTTP"
     path                = "/healthz/ready"
     interval            = 10
@@ -59,7 +59,7 @@ resource "aws_lb_target_group" "istio_https_tg" {
 
   health_check {
     enabled             = true
-    port                = "15021"
+    port                = "31170"
     protocol            = "HTTP"
     path                = "/healthz/ready"
     interval            = 10
