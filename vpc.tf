@@ -64,6 +64,8 @@ resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
   name              = "/aws/vpc/${var.cluster_name}-vpc-flow-logs"
   retention_in_days = 1
   skip_destroy      = false
+  
+  depends_on = [aws_flow_log.vpc_flow_log]
 }
 
 resource "aws_flow_log" "vpc_flow_log" {
@@ -72,6 +74,7 @@ resource "aws_flow_log" "vpc_flow_log" {
   iam_role_arn         = aws_iam_role.flow_logs_role.arn
   vpc_id               = module.vpc.vpc_id
   traffic_type         = "ALL"
+
 }
 
 resource "aws_route53_resolver_query_log_config" "query_log_config" {

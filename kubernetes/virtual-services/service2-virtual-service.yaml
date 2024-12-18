@@ -9,7 +9,10 @@ spec:
   gateways:
   - ingress-gateway
   http:
-  - route:
+  - match:
+    - uri:
+        prefix: "/app2"
+    route:
     - destination:
         host: app2
         port:

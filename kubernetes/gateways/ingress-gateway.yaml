@@ -13,21 +13,3 @@ spec:
       protocol: HTTP
     hosts:
     - "*"
-  - port:
-      number: 30080
-      name: nodeport-http
-      protocol: HTTP
-    hosts:
-    - "*"
-  - port:
-      number: 15021
-      name: healthz
-      protocol: TCP
-    hosts:
-    - "*"
-  - port:
-      number: 30443
-      name: nodeport-https
-      protocol: HTTP
-    hosts:
-    - "*"
