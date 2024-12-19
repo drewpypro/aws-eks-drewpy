@@ -4,10 +4,6 @@ data "aws_instances" "istio_ingress_instances" {
     values = ["istio-node"]
   }
 
-  depends_on = [
-    aws_eks_cluster.eks,
-    aws_eks_node_group.istio_ingress
-  ]
 
 }
 
