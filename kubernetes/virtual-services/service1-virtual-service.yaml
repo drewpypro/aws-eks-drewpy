@@ -5,15 +5,16 @@ metadata:
   namespace: namespace1
 spec:
   hosts:
-  - "*"
+    - "*"
   gateways:
-  - ingress-gateway
+    - ingress-gateway
   http:
-  - match:
-    - uri:
-        prefix: "/app1"
-    route:
-    - destination:
-        host: app1
-        port:
-          number: 80
+    - match:
+        - port: 30080
+          uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: app1
+            port:
+              number: 80
