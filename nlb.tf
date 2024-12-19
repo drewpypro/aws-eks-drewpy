@@ -4,6 +4,11 @@ data "aws_instances" "istio_ingress_instances" {
     values = ["istio-node"]
   }
 
+  depends_on = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.istio_ingress
+  ]
+
 }
 
 locals {
@@ -23,7 +28,7 @@ resource "aws_lb" "istio_ingress_nlb" {
 
   depends_on = [
     aws_eks_cluster.eks,
-    aws_launch_template.worker_node_group
+    aws_eks_node_group.istio_ingress
   ]
 }
 
@@ -100,6 +105,11 @@ resource "aws_lb_target_group_attachment" "istio_http_attachment" {
   target_group_arn = aws_lb_target_group.istio_http_tg.arn
   target_id        = each.key
   port             = 30080
+
+  depends_on = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.istio_ingress
+  ]
 }
 
 resource "aws_lb_target_group_attachment" "istio_https_attachment" {
@@ -107,4 +117,9 @@ resource "aws_lb_target_group_attachment" "istio_https_attachment" {
   target_group_arn = aws_lb_target_group.istio_https_tg.arn
   target_id        = each.key
   port             = 30443
+
+  depends_on = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.istio_ingress
+  ]
 }
