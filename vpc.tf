@@ -41,9 +41,6 @@ module "vpc" {
     }
   )
 
-  lifecycle {
-    ignore_external_dependencies = true
-  }
   
   public_subnet_tags = merge(
     var.common_tags,
