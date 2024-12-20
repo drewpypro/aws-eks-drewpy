@@ -69,80 +69,39 @@ aws-eks-drewpy/
 
 ```
 
+aws ec2 describe-network-interfaces     --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType]'     --output table
 
-Step 1: Verify Access to the Cluster
+rm ~/.kube/config
+aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
 
-	Ensure you can connect to your EKS cluster.
+kubectl get nodes
+kubectl get namespaces
+kubectl get pods -n istio-system
+kubectl get pods -n namespace1
+kubectl get pods -n namespace2
+kubectl get svc
+kubectl get svc -n istio-system
+kubectl describe svc ingress-gateway -n istio-system
+kubectl describe svc istiod -n istio-system
+kubectl describe gateway egress-gateway -n istio-system
+kubectl describe gateway ingress-gateway -n istio-system
+kubectl get virtualservice -n namespace1
+kubectl get virtualservice -n namespace2
+kubectl describe virtualservice service1-virtual-service -n namespace1
+kubectl describe virtualservice service2-virtual-service -n namespace2
 
-	rm ~/.kube/config
-	aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
-	kubectl get nodes
+# Testing
 
-Step 2: Verify Namespaces and Pods
-	Check that Istio and your application namespaces are up and running.
+kubectl get pods -n <your-app-namespace>
+kubectl exec -it <nginx-pod-name> -n <your-app-namespace> -- /bin/bash
+kubectl logs <nginx-pod-name> -n <your-app-namespace>
+kubectl logs -n istio-system $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}')
 
-	kubectl get namespaces
-	kubectl get pods
-	kubectl get pods -n istio-system
-	kubectl get pods -n namespace1
-	kubectl get pods -n namespace2
-
-
-	Ensure the Istio pods (istio-ingressgateway, istiod, etc.) and your application pods (Nginx) are in the Running state.
-
-
-Step 3: Verify the Nginx Service
-	Get details about your Nginx service.
-
-	kubectl get svc
-	kubectl get svc -n istio-system
-	kubectl describe svc istio-ingressgateway -n istio-system
-	kubectl describe svc istiod -n istio-system
-
-Step 5: Verify Ingress Gateway Configuration
-
-	Check that Istio VirtualService and Gateway are configured correctly.
-
-	kubectl get gateway -n namespace1
-	kubectl describe gateway egress-gateway -n istio-system
-	kubectl describe gateway ingress-gateway -n istio-system
-
-	kubectl get virtualservice -n namespace1
-	kubectl get virtualservice -n namespace2
-	kubectl describe virtualservice service1-virtual-service -n namespace1
-	kubectl describe virtualservice service2-virtual-service -n namespace2
-
-
-Step 6: Test Access to Nginx from Inside the Cluster
-	
-	kubectl get pods -n <your-app-namespace>
-
-	Execute a shell inside the Nginx pod:
-
-	kubectl exec -it <nginx-pod-name> -n <your-app-namespace> -- /bin/bash
-
-	Curl the Nginx server from within the pod:
-
-	curl localhost
-
-Step 8: Check Logs
-
-	Check logs for troubleshooting.
-
-	Nginx Pod Logs:
-
-	kubectl logs <nginx-pod-name> -n <your-app-namespace>
-
-	Istio Ingress Gateway Logs:
-
-	kubectl logs -n istio-system $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}')
+istioctl proxy-config routes <ingress-pod-name> -n istio-system
+istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -
+n istio-system
 
 kubectl describe nodes
-
-kubectl describe nodes ip-10-0-1-190.ec2.internal
-kubectl describe nodes ip-10-0-1-249.ec2.internal
-kubectl describe nodes ip-10-0-2-109.ec2.internal
-kubectl describe nodes ip-10-0-2-109.ec2.internal
 
 aws s3 cp s3://logstorebucket/ ./exportedlogs --recursive
 find exportedlogs/ -name "*.gz" -exec gunzip {} \;
