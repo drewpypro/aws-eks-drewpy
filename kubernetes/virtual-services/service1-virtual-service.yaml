@@ -7,12 +7,14 @@ spec:
   hosts:
     - "*"
   gateways:
-    - ingress-gateway
+    - istio-system/ingress-gateway
   http:
     - match:
         - port: 30080
           uri:
-            prefix: "/"
+            prefix: "/app1"
+      rewrite:
+        uri: "/"
       route:
         - destination:
             host: app1
