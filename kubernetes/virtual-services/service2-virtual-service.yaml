@@ -7,7 +7,7 @@ spec:
   hosts:
   - "*"
   gateways:
-  - ingress-gateway
+  - istio-system/ingress-gateway
   http:
   - match:
     - uri:
