@@ -62,83 +62,7 @@ steps:
 #     - terraform plan
 
 
-# - name: terraform-apply
-#   image: hashicorp/terraform:latest
-#   network_mode: br1.201
-#   volumes:
-#     - name: terraform
-#       path: /workspace/terraform
-#   environment:
-#     AWS_ACCESS_KEY_ID:
-#       from_secret: AWS_ACCESS_KEY_ID
-#     AWS_SECRET_ACCESS_KEY:
-#       from_secret: AWS_SECRET_ACCESS_KEY
-#     TF_VAR_SOURCE_SSH_NET:
-#       from_secret: TF_VAR_SOURCE_SSH_NET
-#     TF_VAR_PUBLIC_KEY:
-#       from_secret: TF_VAR_PUBLIC_KEY
-#     TF_VAR_HOME_IP:
-#       from_secret: TF_VAR_HOME_IP
-#   commands:
-#     - apk add --no-cache jq
-#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-#     - terraform init
-#     - terraform apply -auto-approve
-#     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -auto-approve
-
-# - name: kubectl-apply
-#   image: alpine:latest
-#   environment:
-#     AWS_ACCESS_KEY_ID:
-#       from_secret: AWS_ACCESS_KEY_ID
-#     AWS_SECRET_ACCESS_KEY:
-#       from_secret: AWS_SECRET_ACCESS_KEY
-#   volumes:
-#     - name: terraform
-#       path: /workspace/terraform
-#   commands:
-#     # Install dependencies
-#     - apk add --no-cache bash curl unzip python3 py3-pip git openssl
-#     # Install AWS CLI
-#     - pip install awscli --break-system-packages
-#     # Install kubectl
-#     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-#     - chmod +x ./kubectl
-#     - mv ./kubectl /usr/local/bin/
-#     # Install Istio CLI (istioctl)
-#     - curl -L https://istio.io/downloadIstio | sh -
-#     - mv istio-* /usr/local/istio
-#     - export PATH=$PATH:/usr/local/istio/bin
-
-#     # Configure kubectl for the cluster
-#     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
-#     - export KUBECONFIG=/root/.kube/config
-
-#     # Generate a private key
-#     - openssl genrsa -out egress-gateway.key 2048
-
-#     # Generate a certificate signing request (CSR)
-#     - openssl req -new -key egress-gateway.key -out egress-gateway.csr -subj "/CN=egress-gateway/O=example"
-
-#     # Self-sign the certificate (or use a CA to sign it)
-#     - openssl x509 -req -in egress-gateway.csr -signkey egress-gateway.key -out egress-gateway.crt -days 365
-
-#     # Create Kubernetes secret for the egress gateway certificate
-#     - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
-
-#     # Wait for nodes to be ready
-#     - kubectl wait nodes --all --for=condition=Ready --timeout=300s
-#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
-#     - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
-#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
-#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
-#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
-#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
-    
-#     # Output the list of nodes
-#     - kubectl get nodes
-
-- name: terraform-destroy
+- name: terraform-apply
   image: hashicorp/terraform:latest
   network_mode: br1.201
   volumes:
@@ -156,10 +80,86 @@ steps:
     TF_VAR_HOME_IP:
       from_secret: TF_VAR_HOME_IP
   commands:
+    - apk add --no-cache jq
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform init
-    - terraform destroy -target=aws_cloudwatch_log_group.vpc_flow_log_group -auto-approve
-    - terraform destroy -auto-approve
+    - terraform apply -auto-approve
+    - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -auto-approve
+
+- name: kubectl-apply
+  image: alpine:latest
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  commands:
+    # Install dependencies
+    - apk add --no-cache bash curl unzip python3 py3-pip git openssl
+    # Install AWS CLI
+    - pip install awscli --break-system-packages
+    # Install kubectl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin/
+    # Install Istio CLI (istioctl)
+    - curl -L https://istio.io/downloadIstio | sh -
+    - mv istio-* /usr/local/istio
+    - export PATH=$PATH:/usr/local/istio/bin
+
+    # Configure kubectl for the cluster
+    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+    - export KUBECONFIG=/root/.kube/config
+
+    # Generate a private key
+    - openssl genrsa -out egress-gateway.key 2048
+
+    # Generate a certificate signing request (CSR)
+    - openssl req -new -key egress-gateway.key -out egress-gateway.csr -subj "/CN=egress-gateway/O=example"
+
+    # Self-sign the certificate (or use a CA to sign it)
+    - openssl x509 -req -in egress-gateway.csr -signkey egress-gateway.key -out egress-gateway.crt -days 365
+
+    # Create Kubernetes secret for the egress gateway certificate
+    - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
+
+    # Wait for nodes to be ready
+    - kubectl wait nodes --all --for=condition=Ready --timeout=300s
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
+    - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
+    
+    # Output the list of nodes
+    - kubectl get nodes
+
+# - name: terraform-destroy
+#   image: hashicorp/terraform:latest
+#   network_mode: br1.201
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     TF_VAR_SOURCE_SSH_NET:
+#       from_secret: TF_VAR_SOURCE_SSH_NET
+#     TF_VAR_PUBLIC_KEY:
+#       from_secret: TF_VAR_PUBLIC_KEY
+#     TF_VAR_HOME_IP:
+#       from_secret: TF_VAR_HOME_IP
+#   commands:
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+#     - terraform init
+#     - terraform destroy -target=aws_cloudwatch_log_group.vpc_flow_log_group -auto-approve
+#     - terraform destroy -auto-approve
 
 trigger:
   branch:
