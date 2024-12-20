@@ -84,7 +84,7 @@ steps:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform init
     - terraform apply -auto-approve
-    - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment
+    - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -auto-approve
 
 - name: kubectl-apply
   image: alpine:latest
