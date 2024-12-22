@@ -131,7 +131,6 @@ steps:
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
     - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/
-    - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
