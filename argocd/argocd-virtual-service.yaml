@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: argocd-virtual-service
+  namespace: argocd
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-system/ingress-gateway
+  http:
+    - match:
+        - port: 38080
+          uri:
+            prefix: "/argocd"
+      rewrite:
+        uri: "/"
+      route:
+        - destination:
+            host: argocd-server
+            port:
+              number: 8080
