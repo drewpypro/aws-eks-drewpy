@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: argocd-server
-        image: argoproj/argocd:v2.9.1
+        image: quay.io/argoproj/argocd:latest
         ports:
         - containerPort: 8080
         env:
