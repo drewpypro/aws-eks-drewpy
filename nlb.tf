@@ -76,7 +76,7 @@ resource "aws_lb_target_group" "istio_https_tg" {
 
 resource "aws_lb_target_group" "argo_cd_tg" {
   name        = "argocd-http-tg"
-  port        = 38080
+  port        = 31080
   protocol    = "TCP"
   vpc_id      = module.vpc.vpc_id
   target_type = "instance"
@@ -122,7 +122,7 @@ resource "aws_lb_listener" "istio_https_listener" {
 
 resource "aws_lb_listener" "argocd_http_listener" {
   load_balancer_arn = aws_lb.istio_ingress_nlb.arn
-  port              = 38080
+  port              = 31080
   protocol          = "TCP"
 
   default_action {
@@ -152,6 +152,6 @@ resource "aws_lb_target_group_attachment" "argocd_http_attachment" {
   for_each         = local.istio_ingress_instances_map
   target_group_arn = aws_lb_target_group.argo_cd_tg.arn
   target_id        = each.key
-  port             = 38080
+  port             = 31080
 
 }
