@@ -25,3 +25,9 @@ spec:
       protocol: HTTP
     hosts:
     - "*"
+  - port:
+      number: 38080
+      name: http-argocd
+      protocol: HTTP
+    hosts:
+    - "*"

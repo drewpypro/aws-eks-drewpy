@@ -74,6 +74,30 @@ resource "aws_lb_target_group" "istio_https_tg" {
   }
 }
 
+resource "aws_lb_target_group" "argo_cd_tg" {
+  name        = "argocd-http-tg"
+  port        = 38080
+  protocol    = "TCP"
+  vpc_id      = module.vpc.vpc_id
+  target_type = "instance"
+
+  health_check {
+    enabled             = true
+    port                = "31170"
+    protocol            = "HTTP"
+    path                = "/healthz/ready"
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = "argocd-https-tg"
+  }
+}
+
+
 resource "aws_lb_listener" "istio_http_listener" {
   load_balancer_arn = aws_lb.istio_ingress_nlb.arn
   port              = 80
@@ -96,6 +120,18 @@ resource "aws_lb_listener" "istio_https_listener" {
   }
 }
 
+resource "aws_lb_listener" "argocd_http_listener" {
+  load_balancer_arn = aws_lb.istio_ingress_nlb.arn
+  port              = 38080
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.argo_cd_tg.arn
+  }
+}
+
+
 resource "aws_lb_target_group_attachment" "istio_http_attachment" {
   for_each         = local.istio_ingress_instances_map
   target_group_arn = aws_lb_target_group.istio_http_tg.arn
@@ -109,5 +145,13 @@ resource "aws_lb_target_group_attachment" "istio_https_attachment" {
   target_group_arn = aws_lb_target_group.istio_https_tg.arn
   target_id        = each.key
   port             = 30443
+
+}
+
+resource "aws_lb_target_group_attachment" "argocd_http_attachment" {
+  for_each         = local.istio_ingress_instances_map
+  target_group_arn = aws_lb_target_group.argo_cd_tg.arn
+  target_id        = each.key
+  port             = 38080
 
 }
