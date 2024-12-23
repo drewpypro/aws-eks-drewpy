@@ -146,8 +146,8 @@ steps:
     - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
 
     # 4. Apply ArgoCD ConfigMap and RBAC
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/argocd-config.yaml
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/argocd-rbac.yaml
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-config.yaml
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-rbac.yaml
 
     # 5. Add ArgoCD Applications
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/apps/
