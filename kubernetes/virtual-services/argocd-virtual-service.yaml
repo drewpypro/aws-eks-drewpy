@@ -10,13 +10,12 @@ spec:
     - istio-system/ingress-gateway
   http:
     - match:
-        - port: 30080
-          uri:
+        - uri:
             prefix: "/argocd"
       rewrite:
         uri: "/"
       route:
         - destination:
-            host: argocd-server
+            host: argocd-server.argocd.svc.cluster.local
             port:
-              number: 8080
+              number: 80

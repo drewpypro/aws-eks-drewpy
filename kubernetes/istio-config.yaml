@@ -22,7 +22,3 @@ spec:
                 port: 15021
                 targetPort: 15021
                 nodePort: 31170
-              - name: argocd
-                port: 8080
-                targetPort: 31080
-                nodePort: 31080

@@ -14,20 +14,8 @@ spec:
     hosts:
     - "*"
   - port:
-      number: 30080
-      name: http-app1
-      protocol: HTTP
-    hosts:
-    - "*"
-  - port:
-      number: 30443
-      name: http-app2
-      protocol: HTTP
-    hosts:
-    - "*"
-  - port:
-      number: 31080
-      name: http-argocd
+      number: 443
+      name: https
       protocol: HTTP
     hosts:
     - "*"

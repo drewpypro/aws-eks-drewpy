@@ -126,18 +126,30 @@ steps:
     # Create Kubernetes secret for the egress gateway certificate
     - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
 
-    # Wait for nodes to be ready
+    # Wait until nodes are ready
     - kubectl wait nodes --all --for=condition=Ready --timeout=300s
+
+    # 1. Create namespaces
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
+
+    # 2. Install Istio
     - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/
+
+    # 3. Install ArgoCD
+    - kubectl create namespace argocd
+    - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    - kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}'
+    - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
+
+    # 4. Rest of kubernetes manifests
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
+
+    # 5. Wait and validate
     - kubectl wait deployment -n namespace1 app1 --for=condition=Available --timeout=300s
     - kubectl wait deployment -n namespace2 app2 --for=condition=Available --timeout=300s
-    # Output the list of nodes
     - kubectl get nodes
 
 # - name: terraform-destroy
