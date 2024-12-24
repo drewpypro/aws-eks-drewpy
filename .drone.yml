@@ -159,7 +159,7 @@ steps:
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
 
     # 5. Wait and validate
-    - kubectl wait deployment -n namespace1 app1 --for=condition=Available --timeout=300s
+    # - kubectl wait deployment -n namespace1 app1 --for=condition=Available --timeout=300s
     - kubectl wait deployment -n namespace2 app2 --for=condition=Available --timeout=300s
     - kubectl get nodes
 

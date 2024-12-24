@@ -98,8 +98,7 @@ kubectl logs <nginx-pod-name> -n <your-app-namespace>
 kubectl logs -n istio-system $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}')
 
 istioctl proxy-config routes <ingress-pod-name> -n istio-system
-istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -
-n istio-system
+istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -n istio-system
 
 kubectl describe nodes
 
