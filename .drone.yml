@@ -129,7 +129,7 @@ steps:
     - kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
     # Create Kubernetes secret for the egress gateway certificate
-    - kubectl create namespace istio-system
+    - kubectl create namespace istio-system || true
     - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
     - kubectl create secret tls ingress-gateway-cert --cert=ingress-gateway.crt --key=ingress-gateway.key -n istio-system || true
 
