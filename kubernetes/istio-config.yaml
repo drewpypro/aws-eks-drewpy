@@ -9,11 +9,6 @@ spec:
         k8s:
           nodeSelector:
             role: istio-ingress
-          tolerations:
-          - key: "dedicated"
-            operator: "Equal"
-            value: "istio-ingress"
-            effect: "NoSchedule"
           service:
             type: NodePort
             ports:
