@@ -130,11 +130,11 @@ steps:
     - mv istio-* /usr/local/istio
     - export PATH=$PATH:/usr/local/istio/bin
 
-    - kubectl wait --for=condition=Ready nodes --all --timeout=300s
-
     # Configure kubectl for the cluster
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     - export KUBECONFIG=/root/.kube/config
+    - kubectl wait --for=condition=Ready nodes --all --timeout=300s
+
 
     # Install Cert-Manager
     - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
