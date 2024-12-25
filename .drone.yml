@@ -147,7 +147,7 @@ steps:
     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
 
      # Replace the placeholder with the email secret
-    - sed "s/{{EMAIL_PLACEHOLDER}}/${CLOUDFLARE_EMAIL}/" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
+    - sed -i "s/{{EMAIL_PLACEHOLDER}}/${CLOUDFLARE_EMAIL}/" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
       
     # Add ClusterIssuer for Let's Encrypt
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
