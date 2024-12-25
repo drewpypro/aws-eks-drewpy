@@ -12,7 +12,7 @@ resource "cloudflare_record" "istio_ingress_records" {
   type    = "CNAME"
   content = aws_lb.istio_ingress_nlb.dns_name
   ttl     = 300
-  proxied = false
+  proxied = true
 
   depends_on = [aws_lb.istio_ingress_nlb]
 }
