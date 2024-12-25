@@ -13,12 +13,17 @@ spec:
       protocol: HTTP
     hosts:
     - "*"
+    tls:
+      httpsRedirect: true
   - port:
       number: 443
       name: https
       protocol: HTTPS
     hosts:
-    - "*"
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
     tls:
       mode: SIMPLE
       credentialName: ingress-gateway-cert

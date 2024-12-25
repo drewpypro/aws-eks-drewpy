@@ -1,7 +1,3 @@
-provider "aws" {
-  region = var.aws_region
-}
-
 locals {
   paas_subnets = [
     module.vpc.private_subnets[0],

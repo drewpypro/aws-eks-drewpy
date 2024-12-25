@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-gateway-cert
+  namespace: istio-system
+spec:
+  secretName: ingress-gateway-cert
+  dnsNames:
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
