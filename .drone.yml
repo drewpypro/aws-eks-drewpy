@@ -155,30 +155,18 @@ steps:
     # Create Kubernetes secret for the egress gateway certificate
     - kubectl create namespace istio-system || true
     
-    # # Generate a private key
-    # - openssl genrsa -out egress-gateway.key 2048
-    # - openssl genrsa -out ingress-gateway.key 2048
-
-    # # Generate a certificate signing request (CSR)
-    # - openssl req -new -key egress-gateway.key -out egress-gateway.csr -subj "/CN=egress-gateway/O=example"
-    # - openssl req -new -key ingress-gateway.key -out ingress-gateway.csr -subj "/CN=ingress-gateway/O=example"
-
-    # # Self-sign the certificate (or use a CA to sign it)
-    # - openssl x509 -req -in egress-gateway.csr -signkey egress-gateway.key -out egress-gateway.crt -days 365
-    # - openssl x509 -req -in ingress-gateway.csr -signkey ingress-gateway.key -out ingress-gateway.crt -days 365
-
-    # - kubectl create secret tls egress-gateway-cert --cert=egress-gateway.crt --key=egress-gateway.key -n istio-system || true
-    # - kubectl create secret tls ingress-gateway-cert --cert=ingress-gateway.crt --key=ingress-gateway.key -n istio-system || true
-
-
-    # 1. Create namespaces
+    # Create namespaces
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
 
-    # 2. Install Istio
+    # Install Istio
     - kubectl -n kube-system rollout status deploy/coredns --timeout=60s
     - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
     - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
+
+    # Apply Certs
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/ingress-gateway-cert.yaml
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/egress-gateway-cert.yaml
 
 
     # 3. Install ArgoCD
