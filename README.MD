@@ -100,6 +100,9 @@ kubectl logs -n istio-system $(kubectl get pods -n istio-system -l istio=ingress
 istioctl proxy-config routes <ingress-pod-name> -n istio-system
 istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -n istio-system
 
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+kubectl port-forward -n argocd svc/argocd-server 8080:80
+
 kubectl describe nodes
 
 aws s3 cp s3://logstorebucket/ ./exportedlogs --recursive
@@ -107,5 +110,74 @@ find exportedlogs/ -name "*.gz" -exec gunzip {} \;
 find exportedlogs/dnsquerylogs/* -exec cat {} + > dnsqueries.csv
 find exportedlogs/vpcflowlogs/* -exec cat {} + > vpcflowlogs.csv
 find exportedlogs/ -exec cat {} + > flow_logs.csv
-
 ```
+
+# Notes
+
+- v1: This is the earliest (and still very common) group of “core” Kubernetes objects (e.g., Service, Namespace, Pod, ConfigMap, etc.).
+- apps/v1: The “apps” API group. This is for newer or more advanced controllers like Deployment, ReplicaSet, DaemonSet, etc.
+
+- **v1** (Core Group)
+  - Includes “core” Kubernetes objects:
+    - Services
+    - Namespaces
+    - Pods
+    - ConfigMaps
+    - Secrets
+    - etc.
+
+- **apps/v1** (Apps API Group)
+  - Includes more advanced workload controllers:
+    - Deployments
+    - StatefulSets
+    - DaemonSets
+    - ReplicaSets
+    - etc.
+
+- **batch/v1** (Batch API Group)
+  - Includes:
+    - Jobs
+    - CronJobs
+
+- **autoscaling/v2** (Autoscaling API Group)
+  - Includes:
+    - HorizontalPodAutoscalers (HPAs)
+
+- **networking.k8s.io/v1** (Networking API Group)
+  - Includes:
+    - Ingress and IngressClass
+    - NetworkPolicy
+  - Built-in resources for controlling external traffic (Ingress) and cluster networking policies.
+
+- **Custom Resource Definitions (CRDs)**:
+  - Introduce _additional_ resource types from third-party projects or operators (e.g., Istio, ArgoCD, Cert-Manager).
+  - Appear under different `apiVersion` domains (e.g., `istio.io`, `argoproj.io`, `cert-manager.io`).
+  - Only available after installing the CRD(s) into the cluster.
+
+## Namespace (apiVersion: v1, kind: Namespace):
+- Groups resources logically. All resources inside it must have metadata.namespace = <the name>.
+- Deleting a namespace removes all “namespace-scoped” resources in it (pods, services, deployments, etc.).
+
+## Deployment (apiVersion: apps/v1, kind: Deployment):
+- Manages ReplicaSets and Pods. 
+- You define:
+   - The container image(s)
+   - The number of replicas
+   - Pod labels
+- The Deployment ensures your desired number of Pods is running.
+
+## Service (apiVersion: v1, kind: Service):
+- A stable network endpoint for a set of Pods. 
+ - Commonly used types include:
+   - ClusterIP (internal-only service)
+   - NodePort (exposes a port on each node)
+   - LoadBalancer (creates a cloud load balancer in some providers)
+ - You match Pods by label selector (e.g., app: my-app).
+
+## Gateway (apiVersion: networking.istio.io/v1alpha3, kind: Gateway):
+- Defines how inbound or outbound traffic is handled at the edge. You might specify ports, protocols, TLS, etc.
+- In other words, it’s like a specialized Envoy config that replaces or augments something like NGINX Ingress.
+
+## VirtualService (apiVersion: networking.istio.io/v1alpha3, kind: VirtualService):
+- Defines routing rules within the mesh. For example, “traffic to /cormorant goes to the cormorant service on port 80.”
+- Typically bound to a Gateway for external traffic, or used internal to the mesh for service-to-service routing.
