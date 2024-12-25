@@ -83,6 +83,14 @@ steps:
       from_secret: TF_VAR_PUBLIC_KEY
     TF_VAR_HOME_IP:
       from_secret: TF_VAR_HOME_IP
+    CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    CLOUDFLARE_EMAIL:
+      from_secret: CLOUDFLARE_EMAIL
+    TF_VAR_CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    TF_VAR_CLOUDFLARE_ZONE_ID:
+      from_secret: CLOUDFLARE_ZONE_ID
   commands:
     - apk add --no-cache jq
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
