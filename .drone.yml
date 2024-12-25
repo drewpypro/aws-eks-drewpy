@@ -103,6 +103,8 @@ steps:
       from_secret: CLOUDFLARE_EMAIL
     TF_VAR_CLOUDFLARE_API_TOKEN:
       from_secret: CLOUDFLARE_API_TOKEN
+    TF_VAR_CLOUDFLARE_ZONE_ID:
+      from_secret: CLOUDFLARE_ZONE_ID
   volumes:
     - name: terraform
       path: /workspace/terraform
