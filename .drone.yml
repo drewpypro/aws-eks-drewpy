@@ -64,9 +64,7 @@ steps:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
     - terraform init
     - terraform plan
-  when:
-      event:
-        - pull_request
+
 
 # - name: terraform-apply
 #   image: hashicorp/terraform:latest
