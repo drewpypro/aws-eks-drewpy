@@ -66,133 +66,7 @@ steps:
 #     - terraform plan
 
 
-- name: terraform-apply
-  image: hashicorp/terraform:latest
-  network_mode: br1.201
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    TF_VAR_SOURCE_SSH_NET:
-      from_secret: TF_VAR_SOURCE_SSH_NET
-    TF_VAR_PUBLIC_KEY:
-      from_secret: TF_VAR_PUBLIC_KEY
-    TF_VAR_HOME_IP:
-      from_secret: TF_VAR_HOME_IP
-    CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    CLOUDFLARE_EMAIL:
-      from_secret: CLOUDFLARE_EMAIL
-    TF_VAR_CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    TF_VAR_CLOUDFLARE_ZONE_ID:
-      from_secret: CLOUDFLARE_ZONE_ID
-  commands:
-    - apk add --no-cache jq
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
-    - terraform init
-    - terraform apply -auto-approve
-    - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
-
-- name: kubectl-apply
-  image: alpine:latest
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    CLOUDFLARE_EMAIL:
-      from_secret: CLOUDFLARE_EMAIL
-    TF_VAR_CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    TF_VAR_CLOUDFLARE_ZONE_ID:
-      from_secret: CLOUDFLARE_ZONE_ID
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  commands:
-    # Install dependencies
-    - apk add --no-cache bash curl unzip python3 py3-pip git openssl
-    # Install AWS CLI
-    - pip install awscli --break-system-packages
-    # Install kubectl
-    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-    - chmod +x ./kubectl
-    - mv ./kubectl /usr/local/bin/
-    # Install Istio CLI (istioctl)
-    - curl -L https://istio.io/downloadIstio | sh -
-    - mv istio-* /usr/local/istio
-    - export PATH=$PATH:/usr/local/istio/bin
-
-    # Configure kubectl for the cluster
-    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
-    - export KUBECONFIG=/root/.kube/config
-    - kubectl wait --for=condition=Ready nodes --all --timeout=300s
-
-    # Install Cert-Manager
-    - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
-    - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
-
-    # Create Secrets for Cert-Manager
-    - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
-
-     # Replace the placeholder with the email secret
-    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
-      
-    # Add ClusterIssuer for Let's Encrypt
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
-
-
-    # Create Kubernetes secret for the egress gateway certificate
-    - kubectl create namespace istio-system || true
-    
-    # Create namespaces
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
-
-    # Install Istio
-    - kubectl -n kube-system rollout status deploy/coredns --timeout=60s
-    - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
-    - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
-    - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
-
-    # Apply Certs
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/ingress-gateway-cert.yaml
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/egress-gateway-cert.yaml
-
-
-    # 3. Install ArgoCD
-    - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-    - kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}'
-    - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
-
-    # 4. Apply ArgoCD ConfigMap and RBAC
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-config.yaml
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-rbac.yaml
-
-    # 5. Add ArgoCD Applications
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/apps/
-
-    # 6. Rest of kubernetes manifests
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
-
-    # 5. Wait and validate
-    # - kubectl wait deployment -n namespace1 app1 --for=condition=Available --timeout=300s
-    - kubectl wait deployment -n namespace2 app2 --for=condition=Available --timeout=300s
-    - kubectl get nodes
-
-# - name: terraform-destroy
+# - name: terraform-apply
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
 #   volumes:
@@ -218,10 +92,136 @@ steps:
 #     TF_VAR_CLOUDFLARE_ZONE_ID:
 #       from_secret: CLOUDFLARE_ZONE_ID
 #   commands:
+#     - apk add --no-cache jq
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
 #     - terraform init
-#     - terraform destroy -target=aws_cloudwatch_log_group.vpc_flow_log_group -auto-approve
-#     - terraform destroy -auto-approve
+#     - terraform apply -auto-approve
+#     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
+
+# - name: kubectl-apply
+#   image: alpine:latest
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     CLOUDFLARE_EMAIL:
+#       from_secret: CLOUDFLARE_EMAIL
+#     TF_VAR_CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     TF_VAR_CLOUDFLARE_ZONE_ID:
+#       from_secret: CLOUDFLARE_ZONE_ID
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   commands:
+#     # Install dependencies
+#     - apk add --no-cache bash curl unzip python3 py3-pip git openssl
+#     # Install AWS CLI
+#     - pip install awscli --break-system-packages
+#     # Install kubectl
+#     - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+#     - chmod +x ./kubectl
+#     - mv ./kubectl /usr/local/bin/
+#     # Install Istio CLI (istioctl)
+#     - curl -L https://istio.io/downloadIstio | sh -
+#     - mv istio-* /usr/local/istio
+#     - export PATH=$PATH:/usr/local/istio/bin
+
+#     # Configure kubectl for the cluster
+#     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+#     - export KUBECONFIG=/root/.kube/config
+#     - kubectl wait --for=condition=Ready nodes --all --timeout=300s
+
+#     # Install Cert-Manager
+#     - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
+#     - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
+
+#     # Create Secrets for Cert-Manager
+#     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
+
+#      # Replace the placeholder with the email secret
+#     - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
+      
+#     # Add ClusterIssuer for Let's Encrypt
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
+
+
+#     # Create Kubernetes secret for the egress gateway certificate
+#     - kubectl create namespace istio-system || true
+    
+#     # Create namespaces
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
+
+#     # Install Istio
+#     - kubectl -n kube-system rollout status deploy/coredns --timeout=60s
+#     - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
+#     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
+#     - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
+
+#     # Apply Certs
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/ingress-gateway-cert.yaml
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/egress-gateway-cert.yaml
+
+
+#     # 3. Install ArgoCD
+#     - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+#     - kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}'
+#     - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
+
+#     # 4. Apply ArgoCD ConfigMap and RBAC
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-config.yaml
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-rbac.yaml
+
+#     # 5. Add ArgoCD Applications
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/apps/
+
+#     # 6. Rest of kubernetes manifests
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
+
+#     # 5. Wait and validate
+#     # - kubectl wait deployment -n namespace1 app1 --for=condition=Available --timeout=300s
+#     - kubectl wait deployment -n namespace2 app2 --for=condition=Available --timeout=300s
+#     - kubectl get nodes
+
+- name: terraform-destroy
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+    CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    CLOUDFLARE_EMAIL:
+      from_secret: CLOUDFLARE_EMAIL
+    TF_VAR_CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    TF_VAR_CLOUDFLARE_ZONE_ID:
+      from_secret: CLOUDFLARE_ZONE_ID
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - terraform init
+    - terraform destroy -target=aws_cloudwatch_log_group.vpc_flow_log_group -auto-approve
+    - terraform destroy -auto-approve
 
 trigger:
   branch:
