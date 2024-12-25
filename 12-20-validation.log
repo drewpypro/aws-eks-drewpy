@@ -2,7 +2,7 @@
 
 #drew/bash
  aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
-Added new context arn:aws:eks:us-east-1:602484972838:cluster/eks-drewpy to /root/.kube/config
+Added new context arn:aws:eks:us-east-1:<ACCOUNT-ID>:cluster/eks-drewpy to /root/.kube/config
 
 #drew/bash
  kubectl get namespaces
@@ -259,3 +259,32 @@ Spec:
         Port:
           Number:  80
 Events:            <none>
+
+aws ec2 describe-network-interfaces     --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType]'     --output table
+------------------------------------------------------------------------------------------------------------------------------------
+|                                                     DescribeNetworkInterfaces                                                    |   
++--------------+---------------------------------------------------+--------------------------------------+------------------------+   
+|  10.0.1.91   |                                                   |  worker_nodes                        |  interface             |   
+|  10.0.1.12   |                                                   |  ec2_test_sg                         |  interface             |   
+|  10.0.101.78 |  Interface for NAT Gateway nat-0b8657116b2a96967  |  None                                |  nat_gateway           |   
+|  10.0.1.147  |  aws-K8S-i-06bf1961020f2055e                      |  worker_nodes                        |  interface             |   
+|  10.0.1.135  |  Amazon EKS eks-drewpy                            |  eks-cluster-sg-eks-drewpy-21914889  |  interface             |   
+|  10.0.101.37 |  ELB net/istio-ingress-nlb/fae1d1fba26ae65d       |  internet_nlb                        |  network_load_balancer |   
+|  10.0.1.6    |                                                   |  istio_nodes                         |  interface             |   
+|  10.0.2.50   |  Amazon EKS eks-drewpy                            |  eks-cluster-sg-eks-drewpy-21914889  |  interface             |   
+|  10.0.102.196|  ELB net/istio-ingress-nlb/fae1d1fba26ae65d       |  internet_nlb                        |  network_load_balancer |   
+|  10.0.2.145  |  aws-K8S-i-0c5c0d8fb77c7e6b3                      |  worker_nodes                        |  interface             |   
+|  10.0.2.42   |                                                   |  istio_nodes                         |  interface             |   
+|  10.0.2.124  |                                                   |  worker_nodes                        |  interface             |   
++--------------+---------------------------------------------------+--------------------------------------+------------------------+ 
+
+
+ istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -
+n istio-system
+NAME           VHOST NAME     DOMAINS     MATCH                  VIRTUAL SERVICE
+http.30443     *:30443        *           /app2*                 service2-virtual-service.namespace2
+http.30080     *:80           *           /app2*                 service2-virtual-service.namespace2
+http.30080     *:80           *           /app1*                 service1-virtual-service.namespace1
+http.30080     *:80           *           /app2*                 service2-virtual-service.namespace2
+               backend        *           /healthz/ready*
+               backend        *           /stats/prometheus*
