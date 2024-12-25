@@ -7,9 +7,7 @@ spec:
       - name: ingress-gateway
         enabled: true
         k8s:
-          nodeSelector:
-            role: istio-ingress
-          service:
+         service:
             type: NodePort
             ports:
               - name: http
