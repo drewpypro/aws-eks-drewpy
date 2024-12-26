@@ -69,8 +69,11 @@ aws-eks-drewpy/
 
 ```
 
-aws ec2 describe-network-interfaces     --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType]'     --output table
+aws ec2 describe-network-interfaces \
+    --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType, join(`, `, PrivateIpAddresses[?Primary==`false`].PrivateIpAddress)]' \
+    --output table
 
+    
 rm ~/.kube/config
 aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
 
