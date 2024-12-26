@@ -77,6 +77,13 @@ aws ec2 describe-network-interfaces \
 rm ~/.kube/config
 aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
 
+kubectl get nodes -o custom-columns=NAME:.metadata.name,ROLE:.metadata.labels.role
+NAME                         ROLE
+ip-10-0-1-144.ec2.internal   worker
+ip-10-0-1-37.ec2.internal    istio-ingress
+ip-10-0-2-224.ec2.internal   worker
+ip-10-0-2-86.ec2.internal    istio-ingress
+
 kubectl get nodes
 kubectl get namespaces
 kubectl get pods -n istio-system

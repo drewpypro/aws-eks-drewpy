@@ -22,3 +22,5 @@ spec:
                 port: 15021
                 targetPort: 15021
                 nodePort: 31170
+          nodeSelector:
+            role: istio-ingress
