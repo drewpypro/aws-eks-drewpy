@@ -1,0 +1,583 @@
+aws ec2 describe-network-interfaces \
+    --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType, join(`, `, PrivateIpAddresses[?Primary==`false`].PrivateIpAddress)]' \
+    --output table
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                                           DescribeNetworkInterfaces                                                                          |
++--------------+---------------------------------------------------+-------------------+------------------------+--------------------------------------------------------------+
+|  10.0.2.86   |                                                   |  istio_nodes      |  interface             |  10.0.2.225, 10.0.2.245, 10.0.2.24, 10.0.2.8, 10.0.2.105     |
+|  10.0.2.182  |  aws-K8S-i-0d9423d28ed6b2add                      |  worker_nodes     |  interface             |  10.0.2.151, 10.0.2.185, 10.0.2.140, 10.0.2.124, 10.0.2.238  |
+|  10.0.2.230  |  Amazon EKS eks-drewpy                            |  cluster_endpoint |  interface             |                                                              |
+|  10.0.102.24 |  ELB net/istio-ingress-nlb/5adb9b27f4a599b1       |  internet_nlb     |  network_load_balancer |                                                              |
+|  10.0.2.224  |                                                   |  worker_nodes     |  interface             |  10.0.2.33, 10.0.2.52, 10.0.2.228, 10.0.2.23, 10.0.2.152     |
+|  10.0.2.16   |  aws-K8S-i-0d9423d28ed6b2add                      |  worker_nodes     |  interface             |  10.0.2.180, 10.0.2.21, 10.0.2.103, 10.0.2.206, 10.0.2.190   |
+|  10.0.1.197  |  Amazon EKS eks-drewpy                            |  cluster_endpoint |  interface             |                                                              |
+|  10.0.1.37   |                                                   |  istio_nodes      |  interface             |  10.0.1.192, 10.0.1.6, 10.0.1.184, 10.0.1.60, 10.0.1.141     |
+|  10.0.1.176  |  aws-K8S-i-03450dd263f995342                      |  worker_nodes     |  interface             |  10.0.1.113, 10.0.1.84, 10.0.1.121, 10.0.1.90, 10.0.1.235    |
+|  10.0.1.66   |  aws-K8S-i-03450dd263f995342                      |  worker_nodes     |  interface             |  10.0.1.51, 10.0.1.131, 10.0.1.134, 10.0.1.158, 10.0.1.191   |
+|  10.0.1.101  |                                                   |  ec2_test_sg      |  interface             |                                                              |
+|  10.0.1.144  |                                                   |  worker_nodes     |  interface             |  10.0.1.98, 10.0.1.100, 10.0.1.204, 10.0.1.15, 10.0.1.111    |
+|  10.0.101.73 |  ELB net/istio-ingress-nlb/5adb9b27f4a599b1       |  internet_nlb     |  network_load_balancer |                                                              |
+|  10.0.101.225|  Interface for NAT Gateway nat-05e8a8e5cc959a322  |  None             |  nat_gateway           |                                                              |
++--------------+---------------------------------------------------+-------------------+------------------------+--------------------------------------------------------------+
+
+ kubectl get pods -A
+NAMESPACE             NAME                                                READY   STATUS    RESTARTS        AGE
+anhinga-namespace     anhinga-756c466d54-c6jth                            2/2     Running   0               58m
+anhinga-namespace     anhinga-756c466d54-c9hgp                            2/2     Running   0               58m
+argocd                argocd-application-controller-0                     1/1     Running   0               6h13m
+argocd                argocd-applicationset-controller-64f6bd6456-qlnr9   1/1     Running   0               6h13m
+argocd                argocd-dex-server-5fdcd9df8b-4gnkm                  1/1     Running   2 (6h12m ago)   6h13m
+argocd                argocd-notifications-controller-778495d96f-zcdxx    1/1     Running   0               6h13m
+argocd                argocd-redis-69fd8bd669-p7w5h                       1/1     Running   0               6h13m
+argocd                argocd-repo-server-75567c944-9bhlx                  1/1     Running   0               6h13m
+argocd                argocd-server-5c768cdd96-dsgqk                      1/1     Running   0               6h13m
+cert-manager          cert-manager-58b98fc4bd-df5bz                       1/1     Running   0               5h54m
+cert-manager          cert-manager-cainjector-55d94dc4cc-rp6v9            1/1     Running   0               6h14m
+cert-manager          cert-manager-webhook-564f647c66-8wd26               1/1     Running   0               6h14m
+cormorant-namespace   cormorant-7c5fcdcfbc-5kxtg                          2/2     Running   0               58m
+cormorant-namespace   cormorant-7c5fcdcfbc-xvtvx                          2/2     Running   0               58m
+gannet-namespace      gannet-5f999cb977-5fqj5                             2/2     Running   0               58m
+gannet-namespace      gannet-5f999cb977-hbnkd                             2/2     Running   0               58m
+istio-system          ingress-gateway-668c6d6fc9-c9cvc                    1/1     Running   0               46m
+istio-system          istiod-6fbf849d94-q68dr                             1/1     Running   0               6h13m
+kube-system           aws-node-6mlql                                      2/2     Running   0               6h18m
+kube-system           aws-node-gphgw                                      2/2     Running   0               6h17m
+kube-system           aws-node-j9hvn                                      2/2     Running   0               6h18m
+kube-system           aws-node-kxnvc                                      2/2     Running   0               6h17m
+kube-system           coredns-789f8477df-2djxc                            1/1     Running   0               6h25m
+kube-system           coredns-789f8477df-jfxjq                            1/1     Running   0               6h25m
+kube-system           eks-pod-identity-agent-2n4x2                        1/1     Running   0               6h18m
+kube-system           eks-pod-identity-agent-8qmg9                        1/1     Running   0               6h18m
+kube-system           eks-pod-identity-agent-ln7zw                        1/1     Running   0               6h18m
+kube-system           eks-pod-identity-agent-q5h9t                        1/1     Running   0               6h18m
+kube-system           kube-proxy-bk9t5                                    1/1     Running   0               6h19m
+kube-system           kube-proxy-br86t                                    1/1     Running   0               6h19m
+kube-system           kube-proxy-nqqdt                                    1/1     Running   0               6h19m
+kube-system           kube-proxy-t9gdr                                    1/1     Running   0               6h18m
+namespace1            app1-d59fd549d-h9hrs                                2/2     Running   0               6h12m
+namespace2            app2-56c985b85b-7cf5l                               2/2     Running   0               6h12m
+
+kubectl get deployments -A
+NAMESPACE             NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+anhinga-namespace     anhinga                            2/2     2            2           6h21m
+argocd                argocd-applicationset-controller   1/1     1            1           6h21m
+argocd                argocd-dex-server                  1/1     1            1           6h21m
+argocd                argocd-notifications-controller    1/1     1            1           6h21m
+argocd                argocd-redis                       1/1     1            1           6h21m
+argocd                argocd-repo-server                 1/1     1            1           6h21m
+argocd                argocd-server                      1/1     1            1           6h21m
+cert-manager          cert-manager                       1/1     1            1           6h22m
+cert-manager          cert-manager-cainjector            1/1     1            1           6h22m
+cert-manager          cert-manager-webhook               1/1     1            1           6h22m
+cormorant-namespace   cormorant                          2/2     2            2           6h21m
+gannet-namespace      gannet                             2/2     2            2           6h21m
+istio-system          ingress-gateway                    1/1     1            1           6h22m
+istio-system          istiod                             1/1     1            1           6h22m
+kube-system           coredns                            2/2     2            2           6h34m
+namespace1            app1                               1/1     1            1           6h21m
+namespace2            app2                               1/1     1            1           6h21m
+
+kubectl get namespaces -A
+NAME                  STATUS   AGE
+anhinga-namespace     Active   6h14m
+argocd                Active   6h15m
+cert-manager          Active   6h16m
+cormorant-namespace   Active   6h14m
+default               Active   6h29m
+gannet-namespace      Active   6h14m
+istio-system          Active   6h15m
+kube-node-lease       Active   6h29m
+kube-public           Active   6h29m
+kube-system           Active   6h29m
+namespace1            Active   6h15m
+namespace2            Active   6h15m
+
+
+kubectl get gateways -A
+NAMESPACE      NAME              AGE
+istio-system   egress-gateway    6h15m
+istio-system   ingress-gateway   6h15m
+
+kubectl get virtualservices -A
+NAMESPACE             NAME                        GATEWAYS                           HOSTS                      AGE
+anhinga-namespace     anhinga-virtual-service     ["istio-system/ingress-gateway"]   ["anhinga.drewpy.pro"]     6h15m
+argocd                argocd-virtual-service      ["istio-system/ingress-gateway"]   ["argocd.drewpy.pro"]      6h15m
+cormorant-namespace   cormorant-virtual-service   ["istio-system/ingress-gateway"]   ["cormorant.drewpy.pro"]   6h15m
+gannet-namespace      gannet-virtual-service      ["istio-system/ingress-gateway"]   ["gannet.drewpy.pro"]      6h15m
+namespace1            service1-virtual-service    ["istio-system/ingress-gateway"]   ["*"]                      6h15m
+namespace2            service2-virtual-service    ["istio-system/ingress-gateway"]   ["*"]                      6h15m
+
+istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -n istio-system
+NAME                                             VHOST NAME                   DOMAINS                  MATCH                  VIRTUAL SERVICE
+https.443.https.ingress-gateway.istio-system     anhinga.drewpy.pro:443       anhinga.drewpy.pro       /app1*                 service1-virtual-service.namespace1
+https.443.https.ingress-gateway.istio-system     anhinga.drewpy.pro:443       anhinga.drewpy.pro       /app2*                 service2-virtual-service.namespace2
+https.443.https.ingress-gateway.istio-system     anhinga.drewpy.pro:443       anhinga.drewpy.pro       /*                     anhinga-virtual-service.anhinga-namespace
+https.443.https.ingress-gateway.istio-system     argocd.drewpy.pro:443        argocd.drewpy.pro        /app1*                 service1-virtual-service.namespace1
+https.443.https.ingress-gateway.istio-system     argocd.drewpy.pro:443        argocd.drewpy.pro        /app2*                 service2-virtual-service.namespace2
+https.443.https.ingress-gateway.istio-system     argocd.drewpy.pro:443        argocd.drewpy.pro        /*                     argocd-virtual-service.argocd
+https.443.https.ingress-gateway.istio-system     cormorant.drewpy.pro:443     cormorant.drewpy.pro     /app1*                 service1-virtual-service.namespace1
+https.443.https.ingress-gateway.istio-system     cormorant.drewpy.pro:443     cormorant.drewpy.pro     /app2*                 service2-virtual-service.namespace2
+https.443.https.ingress-gateway.istio-system     cormorant.drewpy.pro:443     cormorant.drewpy.pro     /*                     cormorant-virtual-service.cormorant-namespace
+https.443.https.ingress-gateway.istio-system     gannet.drewpy.pro:443        gannet.drewpy.pro        /app1*                 service1-virtual-service.namespace1
+https.443.https.ingress-gateway.istio-system     gannet.drewpy.pro:443        gannet.drewpy.pro        /app2*                 service2-virtual-service.namespace2
+https.443.https.ingress-gateway.istio-system     gannet.drewpy.pro:443        gannet.drewpy.pro        /*                     gannet-virtual-service.gannet-namespace
+http.30080                                       anhinga.drewpy.pro:80        anhinga.drewpy.pro       /app1*                 service1-virtual-service.namespace1
+http.30080                                       anhinga.drewpy.pro:80        anhinga.drewpy.pro       /app2*                 service2-virtual-service.namespace2
+http.30080                                       anhinga.drewpy.pro:80        anhinga.drewpy.pro       /*                     anhinga-virtual-service.anhinga-namespace
+http.30080                                       argocd.drewpy.pro:80         argocd.drewpy.pro        /app1*                 service1-virtual-service.namespace1
+http.30080                                       argocd.drewpy.pro:80         argocd.drewpy.pro        /app2*                 service2-virtual-service.namespace2
+http.30080                                       argocd.drewpy.pro:80         argocd.drewpy.pro        /*                     argocd-virtual-service.argocd
+http.30080                                       cormorant.drewpy.pro:80      cormorant.drewpy.pro     /app1*                 service1-virtual-service.namespace1
+http.30080                                       cormorant.drewpy.pro:80      cormorant.drewpy.pro     /app2*                 service2-virtual-service.namespace2
+http.30080                                       cormorant.drewpy.pro:80      cormorant.drewpy.pro     /*                     cormorant-virtual-service.cormorant-namespace
+http.30080                                       gannet.drewpy.pro:80         gannet.drewpy.pro        /app1*                 service1-virtual-service.namespace1
+http.30080                                       gannet.drewpy.pro:80         gannet.drewpy.pro        /app2*                 service2-virtual-service.namespace2
+http.30080                                       gannet.drewpy.pro:80         gannet.drewpy.pro        /*                     gannet-virtual-service.gannet-namespace
+                                                 backend                      *                        /stats/prometheus*
+                                                 backend                      *                        /healthz/ready*
+
+
+NAMESPACE             NAME                                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                                      AGE     SELECTOR
+anhinga-namespace     anhinga                                   ClusterIP   172.20.46.169    <none>        80/TCP                                       6h18m   app=anhinga
+argocd                argocd-applicationset-controller          ClusterIP   172.20.88.117    <none>        7000/TCP,8080/TCP                            6h19m   app.kubernetes.io/name=argocd-applicationset-controller
+argocd                argocd-dex-server                         ClusterIP   172.20.236.196   <none>        5556/TCP,5557/TCP,5558/TCP                   6h19m   app.kubernetes.io/name=argocd-dex-server
+argocd                argocd-metrics                            ClusterIP   172.20.153.102   <none>        8082/TCP                                     6h19m   app.kubernetes.io/name=argocd-application-controller
+argocd                argocd-notifications-controller-metrics   ClusterIP   172.20.233.255   <none>        9001/TCP                                     6h19m   app.kubernetes.io/name=argocd-notifications-controller
+argocd                argocd-redis                              ClusterIP   172.20.153.179   <none>        6379/TCP                                     6h19m   app.kubernetes.io/name=argocd-redis
+argocd                argocd-repo-server                        ClusterIP   172.20.164.88    <none>        8081/TCP,8084/TCP                            6h19m   app.kubernetes.io/name=argocd-repo-server
+argocd                argocd-server                             ClusterIP   172.20.209.239   <none>        80/TCP,443/TCP                               6h19m   app.kubernetes.io/name=argocd-server
+argocd                argocd-server-metrics                     ClusterIP   172.20.52.166    <none>        8083/TCP                                     6h19m   app.kubernetes.io/name=argocd-server
+cert-manager          cert-manager                              ClusterIP   172.20.136.151   <none>        9402/TCP                                     6h20m   app.kubernetes.io/component=controller,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cert-manager
+cert-manager          cert-manager-cainjector                   ClusterIP   172.20.185.10    <none>        9402/TCP                                     6h20m   app.kubernetes.io/component=cainjector,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=cainjector
+cert-manager          cert-manager-webhook                      ClusterIP   172.20.82.201    <none>        443/TCP,9402/TCP                             6h20m   app.kubernetes.io/component=webhook,app.kubernetes.io/instance=cert-manager,app.kubernetes.io/name=webhook
+cormorant-namespace   cormorant                                 ClusterIP   172.20.207.27    <none>        80/TCP                                       6h18m   app=cormorant
+default               kubernetes                                ClusterIP   172.20.0.1       <none>        443/TCP                                      6h33m   <none>
+gannet-namespace      gannet                                    ClusterIP   172.20.158.51    <none>        80/TCP                                       6h18m   app=gannet
+istio-system          ingress-gateway                           NodePort    172.20.169.144   <none>        80:30080/TCP,443:30443/TCP,15021:31170/TCP   6h19m   app=istio-ingressgateway,istio=ingressgateway
+istio-system          istiod                                    ClusterIP   172.20.62.140    <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP        6h19m   app=istiod,istio=pilot
+kube-system           eks-extension-metrics-api                 ClusterIP   172.20.48.67     <none>        443/TCP                                      6h33m   <none>
+kube-system           kube-dns                                  ClusterIP   172.20.0.10      <none>        53/UDP,53/TCP,9153/TCP                       6h31m   k8s-app=kube-dns
+namespace1            app1                                      ClusterIP   172.20.84.161    <none>        80/TCP                                       6h18m   app=app1
+namespace2            app2                                      ClusterIP   172.20.92.14     <none>        80/TCP                                       6h18m   app=app2
+
+kubectl get nodes -A
+NAME                         STATUS   ROLES    AGE     VERSION
+ip-10-0-1-144.ec2.internal   Ready    <none>   6h23m   v1.31.3-eks-59bf375
+ip-10-0-1-37.ec2.internal    Ready    <none>   6h23m   v1.31.3-eks-59bf375
+ip-10-0-2-224.ec2.internal   Ready    <none>   6h23m   v1.31.3-eks-59bf375
+ip-10-0-2-86.ec2.internal    Ready    <none>   6h23m   v1.31.3-eks-59bf375
+
+
+kubectl get certificates -A
+NAMESPACE      NAME                   READY   SECRET                 AGE
+istio-system   egress-gateway-cert    True    egress-gateway-cert    6h18m
+istio-system   ingress-gateway-cert   True    ingress-gateway-cert   6h18m
+
+kubectl get secrets -A
+NAMESPACE      NAME                          TYPE                DATA   AGE
+argocd         argocd-initial-admin-secret   Opaque              1      6h17m
+argocd         argocd-notifications-secret   Opaque              0      6h18m
+argocd         argocd-redis                  Opaque              1      6h17m
+argocd         argocd-secret                 Opaque              3      6h18m
+cert-manager   cert-manager-webhook-ca       Opaque              3      6h19m
+cert-manager   cloudflare-api-token          Opaque              1      6h18m
+cert-manager   letsencrypt-key               Opaque              1      6h18m
+istio-system   egress-gateway-cert           kubernetes.io/tls   2      5h56m
+istio-system   ingress-gateway-cert          kubernetes.io/tls   2      5h56m
+istio-system   istio-ca-secret               istio.io/ca-root    5      6h18m
+
+
+
+
+# BEFORE NODE SELECTOR
+
+kubectl get pods -o wide --all-namespaces | grep "namespace"
+anhinga-namespace     anhinga-88bb968f9-bsm54                             2/2     Running   0               5h9m    10.0.1.235   ip-10-0-1-144.ec2.internal   <none>           <none>
+anhinga-namespace     anhinga-88bb968f9-rh5zm                             2/2     Running   0               5h9m    10.0.2.206   ip-10-0-2-224.ec2.internal   <none>           <none>
+cormorant-namespace   cormorant-6dc68dbb64-fpspf                          2/2     Running   0               5h9m    10.0.2.180   ip-10-0-2-224.ec2.internal   <none>           <none>
+cormorant-namespace   cormorant-6dc68dbb64-k4dhz                          2/2     Running   0               5h9m    10.0.1.121   ip-10-0-1-144.ec2.internal   <none>           <none>
+gannet-namespace      gannet-787b588558-76649                             2/2     Running   0               5h9m    10.0.1.90    ip-10-0-1-144.ec2.internal   <none>           <none>
+gannet-namespace      gannet-787b588558-8t649                             2/2     Running   0               5h9m    10.0.2.103   ip-10-0-2-224.ec2.internal   <none>           <none>
+namespace1            app1-d59fd549d-h9hrs                                2/2     Running   0               5h9m    10.0.2.21    ip-10-0-2-224.ec2.internal   <none>           <none>
+namespace2            app2-56c985b85b-7cf5l                               2/2     Running   0               5h9m    10.0.1.15    ip-10-0-1-144.ec2.internal   <none>           <none>
+
+kubectl get pods -o wide --all-namespaces | grep "gateway"
+istio-system          ingress-gateway-f87f8f564-cfbxj                     1/1     Running   0               4h50m   10.0.2.190   ip-10-0-2-224.ec2.internal   <none>           <none>
+
+kubectl get nodes -o custom-columns=NAME:.metadata.name,ROLE:.metadata.labels.role
+NAME                         ROLE
+ip-10-0-1-144.ec2.internal   worker
+ip-10-0-1-37.ec2.internal    istio-ingress
+ip-10-0-2-224.ec2.internal   worker
+ip-10-0-2-86.ec2.internal    istio-ingress
+
+
+
+
+kubectl describe nodes -A
+Name:               ip-10-0-1-144.ec2.internal
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=t3.medium
+                    beta.kubernetes.io/os=linux
+                    eks.amazonaws.com/capacityType=ON_DEMAND
+                    eks.amazonaws.com/nodegroup=terraform-20241226151301475600000014
+                    eks.amazonaws.com/nodegroup-image=ami-02c0c54a3a6c62ac1
+                    eks.amazonaws.com/sourceLaunchTemplateId=lt-049b230d08e7e7e67
+                    eks.amazonaws.com/sourceLaunchTemplateVersion=1
+                    failure-domain.beta.kubernetes.io/region=us-east-1
+                    failure-domain.beta.kubernetes.io/zone=us-east-1a
+                    k8s.io/cloud-provider-aws=31c189abe7c063500f25720f7bdc9beb
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-10-0-1-144.ec2.internal
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=t3.medium
+                    role=worker
+                    topology.k8s.aws/zone-id=use1-az6
+                    topology.kubernetes.io/region=us-east-1
+                    topology.kubernetes.io/zone=us-east-1a
+Annotations:        alpha.kubernetes.io/provided-node-ip: 10.0.1.144
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 26 Dec 2024 08:17:17 -0700
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  ip-10-0-1-144.ec2.internal
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 26 Dec 2024 14:43:32 -0700
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 26 Dec 2024 14:40:01 -0700   Thu, 26 Dec 2024 08:17:13 -0700   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 26 Dec 2024 14:40:01 -0700   Thu, 26 Dec 2024 08:17:13 -0700   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 26 Dec 2024 14:40:01 -0700   Thu, 26 Dec 2024 08:17:13 -0700   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 26 Dec 2024 14:40:01 -0700   Thu, 26 Dec 2024 08:17:35 -0700   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:   10.0.1.144
+  InternalDNS:  ip-10-0-1-144.ec2.internal
+  Hostname:     ip-10-0-1-144.ec2.internal
+Capacity:
+  cpu:                2
+  ephemeral-storage:  20893676Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3919544Ki
+  pods:               17
+Allocatable:
+  cpu:                1930m
+  ephemeral-storage:  18181869946
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3364536Ki
+  pods:               17
+System Info:
+  Machine ID:                 ec222b3ee80ac9a79f68ceff066c6732
+  System UUID:                ec222b3e-e80a-c9a7-9f68-ceff066c6732
+  Boot ID:                    a2d59ccb-0ba8-4952-9793-4c89bed111b7
+  Kernel Version:             6.1.119-129.201.amzn2023.x86_64
+  OS Image:                   Amazon Linux 2023.6.20241212
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.7.23
+  Kubelet Version:            v1.31.3-eks-59bf375
+  Kube-Proxy Version:         v1.31.3-eks-59bf375
+ProviderID:                   aws:///us-east-1a/i-03450dd263f995342
+Non-terminated Pods:          (13 in total)
+  Namespace                   Name                                     CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                     ------------  ----------  ---------------  -------------  ---
+  anhinga-namespace           anhinga-756c466d54-c9hgp                 100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      65m
+  cert-manager                cert-manager-58b98fc4bd-df5bz            0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h1m
+  cert-manager                cert-manager-webhook-564f647c66-8wd26    0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h21m
+  cormorant-namespace         cormorant-7c5fcdcfbc-xvtvx               100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      65m
+  gannet-namespace            gannet-5f999cb977-5fqj5                  100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      65m
+  gannet-namespace            gannet-5f999cb977-hbnkd                  100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      65m
+  istio-system                istiod-6fbf849d94-q68dr                  500m (25%)    0 (0%)      2Gi (62%)        0 (0%)         6h20m
+  kube-system                 aws-node-gphgw                           50m (2%)      0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 coredns-789f8477df-2djxc                 100m (5%)     0 (0%)      70Mi (2%)        170Mi (5%)     6h32m
+  kube-system                 coredns-789f8477df-jfxjq                 100m (5%)     0 (0%)      70Mi (2%)        170Mi (5%)     6h32m
+  kube-system                 eks-pod-identity-agent-q5h9t             0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 kube-proxy-bk9t5                         100m (5%)     0 (0%)      0 (0%)           0 (0%)         6h26m
+  namespace2                  app2-56c985b85b-7cf5l                    100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      6h19m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests      Limits
+  --------           --------      ------
+  cpu                1350m (69%)   10 (518%)
+  memory             2828Mi (86%)  5460Mi (166%)
+  ephemeral-storage  0 (0%)        0 (0%)
+  hugepages-1Gi      0 (0%)        0 (0%)
+  hugepages-2Mi      0 (0%)        0 (0%)
+Events:              <none>
+
+
+Name:               ip-10-0-1-37.ec2.internal
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=t3.medium
+                    beta.kubernetes.io/os=linux
+                    eks.amazonaws.com/capacityType=ON_DEMAND
+                    eks.amazonaws.com/nodegroup=terraform-20241226151301476500000016
+                    eks.amazonaws.com/nodegroup-image=ami-02c0c54a3a6c62ac1
+                    eks.amazonaws.com/sourceLaunchTemplateId=lt-0e4c32d4d6f3862f0
+                    eks.amazonaws.com/sourceLaunchTemplateVersion=1
+                    failure-domain.beta.kubernetes.io/region=us-east-1
+                    failure-domain.beta.kubernetes.io/zone=us-east-1a
+                    k8s.io/cloud-provider-aws=31c189abe7c063500f25720f7bdc9beb
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-10-0-1-37.ec2.internal
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=t3.medium
+                    role=istio-ingress
+                    topology.k8s.aws/zone-id=use1-az6
+                    topology.kubernetes.io/region=us-east-1
+                    topology.kubernetes.io/zone=us-east-1a
+Annotations:        alpha.kubernetes.io/provided-node-ip: 10.0.1.37
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 26 Dec 2024 08:17:23 -0700
+Taints:             dedicated=istio-ingress:NoSchedule
+Unschedulable:      false
+Lease:
+  HolderIdentity:  ip-10-0-1-37.ec2.internal
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 26 Dec 2024 14:43:38 -0700
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 26 Dec 2024 14:41:25 -0700   Thu, 26 Dec 2024 08:17:19 -0700   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 26 Dec 2024 14:41:25 -0700   Thu, 26 Dec 2024 08:17:19 -0700   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 26 Dec 2024 14:41:25 -0700   Thu, 26 Dec 2024 08:17:19 -0700   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 26 Dec 2024 14:41:25 -0700   Thu, 26 Dec 2024 08:17:43 -0700   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:   10.0.1.37
+  InternalDNS:  ip-10-0-1-37.ec2.internal
+  Hostname:     ip-10-0-1-37.ec2.internal
+Capacity:
+  cpu:                2
+  ephemeral-storage:  20893676Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3919544Ki
+  pods:               17
+Allocatable:
+  cpu:                1930m
+  ephemeral-storage:  18181869946
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3364536Ki
+  pods:               17
+System Info:
+  Machine ID:                 ec2a7d4a338c16d0252511defdb67e61
+  System UUID:                ec2a7d4a-338c-16d0-2525-11defdb67e61
+  Boot ID:                    a03f030f-d856-4389-a92a-d1bddb4451d5
+  Kernel Version:             6.1.119-129.201.amzn2023.x86_64
+  OS Image:                   Amazon Linux 2023.6.20241212
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.7.23
+  Kubelet Version:            v1.31.3-eks-59bf375
+  Kube-Proxy Version:         v1.31.3-eks-59bf375
+ProviderID:                   aws:///us-east-1a/i-07b0b5b4a3222ecaf
+Non-terminated Pods:          (3 in total)
+  Namespace                   Name                            CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                            ------------  ----------  ---------------  -------------  ---
+  kube-system                 aws-node-6mlql                  50m (2%)      0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 eks-pod-identity-agent-8qmg9    0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 kube-proxy-nqqdt                100m (5%)     0 (0%)      0 (0%)           0 (0%)         6h26m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests   Limits
+  --------           --------   ------
+  cpu                150m (7%)  0 (0%)
+  memory             0 (0%)     0 (0%)
+  ephemeral-storage  0 (0%)     0 (0%)
+  hugepages-1Gi      0 (0%)     0 (0%)
+  hugepages-2Mi      0 (0%)     0 (0%)
+Events:              <none>
+
+
+Name:               ip-10-0-2-224.ec2.internal
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=t3.medium
+                    beta.kubernetes.io/os=linux
+                    eks.amazonaws.com/capacityType=ON_DEMAND
+                    eks.amazonaws.com/nodegroup=terraform-20241226151301475600000014
+                    eks.amazonaws.com/nodegroup-image=ami-02c0c54a3a6c62ac1
+                    eks.amazonaws.com/sourceLaunchTemplateId=lt-049b230d08e7e7e67
+                    eks.amazonaws.com/sourceLaunchTemplateVersion=1
+                    failure-domain.beta.kubernetes.io/region=us-east-1
+                    failure-domain.beta.kubernetes.io/zone=us-east-1b
+                    k8s.io/cloud-provider-aws=31c189abe7c063500f25720f7bdc9beb
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-10-0-2-224.ec2.internal
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=t3.medium
+                    role=worker
+                    topology.k8s.aws/zone-id=use1-az1
+                    topology.kubernetes.io/region=us-east-1
+                    topology.kubernetes.io/zone=us-east-1b
+Annotations:        alpha.kubernetes.io/provided-node-ip: 10.0.2.224
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 26 Dec 2024 08:17:17 -0700
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  ip-10-0-2-224.ec2.internal
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 26 Dec 2024 14:43:38 -0700
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 26 Dec 2024 14:41:43 -0700   Thu, 26 Dec 2024 08:17:14 -0700   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 26 Dec 2024 14:41:43 -0700   Thu, 26 Dec 2024 08:17:14 -0700   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 26 Dec 2024 14:41:43 -0700   Thu, 26 Dec 2024 08:17:14 -0700   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 26 Dec 2024 14:41:43 -0700   Thu, 26 Dec 2024 08:17:38 -0700   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:   10.0.2.224
+  InternalDNS:  ip-10-0-2-224.ec2.internal
+  Hostname:     ip-10-0-2-224.ec2.internal
+Capacity:
+  cpu:                2
+  ephemeral-storage:  20893676Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3919544Ki
+  pods:               17
+Allocatable:
+  cpu:                1930m
+  ephemeral-storage:  18181869946
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3364536Ki
+  pods:               17
+System Info:
+  Machine ID:                 ec248755fa22c95b9793d945fec05dfc
+  System UUID:                ec248755-fa22-c95b-9793-d945fec05dfc
+  Boot ID:                    30bf861e-9553-463b-a8a0-c00a9529e855
+  Kernel Version:             6.1.119-129.201.amzn2023.x86_64
+  OS Image:                   Amazon Linux 2023.6.20241212
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.7.23
+  Kubelet Version:            v1.31.3-eks-59bf375
+  Kube-Proxy Version:         v1.31.3-eks-59bf375
+ProviderID:                   aws:///us-east-1b/i-0d9423d28ed6b2add
+Non-terminated Pods:          (15 in total)
+  Namespace                   Name                                                 CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                                 ------------  ----------  ---------------  -------------  ---
+  anhinga-namespace           anhinga-756c466d54-c6jth                             100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      65m
+  argocd                      argocd-application-controller-0                      0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  argocd                      argocd-applicationset-controller-64f6bd6456-qlnr9    0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  argocd                      argocd-dex-server-5fdcd9df8b-4gnkm                   0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  argocd                      argocd-notifications-controller-778495d96f-zcdxx     0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  argocd                      argocd-redis-69fd8bd669-p7w5h                        0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  argocd                      argocd-repo-server-75567c944-9bhlx                   0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  argocd                      argocd-server-5c768cdd96-dsgqk                       0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h20m
+  cert-manager                cert-manager-cainjector-55d94dc4cc-rp6v9             0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h21m
+  cormorant-namespace         cormorant-7c5fcdcfbc-5kxtg                           100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      65m
+  istio-system                ingress-gateway-668c6d6fc9-c9cvc                     100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      53m
+  kube-system                 aws-node-j9hvn                                       50m (2%)      0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 eks-pod-identity-agent-2n4x2                         0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 kube-proxy-br86t                                     100m (5%)     0 (0%)      0 (0%)           0 (0%)         6h26m
+  namespace1                  app1-d59fd549d-h9hrs                                 100m (5%)     2 (103%)    128Mi (3%)       1Gi (31%)      6h19m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests     Limits
+  --------           --------     ------
+  cpu                550m (28%)   8 (414%)
+  memory             512Mi (15%)  4Gi (124%)
+  ephemeral-storage  0 (0%)       0 (0%)
+  hugepages-1Gi      0 (0%)       0 (0%)
+  hugepages-2Mi      0 (0%)       0 (0%)
+Events:              <none>
+
+
+Name:               ip-10-0-2-86.ec2.internal
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=t3.medium
+                    beta.kubernetes.io/os=linux
+                    eks.amazonaws.com/capacityType=ON_DEMAND
+                    eks.amazonaws.com/nodegroup=terraform-20241226151301476500000016
+                    eks.amazonaws.com/nodegroup-image=ami-02c0c54a3a6c62ac1
+                    eks.amazonaws.com/sourceLaunchTemplateId=lt-0e4c32d4d6f3862f0
+                    eks.amazonaws.com/sourceLaunchTemplateVersion=1
+                    failure-domain.beta.kubernetes.io/region=us-east-1
+                    failure-domain.beta.kubernetes.io/zone=us-east-1b
+                    k8s.io/cloud-provider-aws=31c189abe7c063500f25720f7bdc9beb
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-10-0-2-86.ec2.internal
+                    kubernetes.io/os=linux
+                    node.kubernetes.io/instance-type=t3.medium
+                    role=istio-ingress
+                    topology.k8s.aws/zone-id=use1-az1
+                    topology.kubernetes.io/region=us-east-1
+                    topology.kubernetes.io/zone=us-east-1b
+Annotations:        alpha.kubernetes.io/provided-node-ip: 10.0.2.86
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 26 Dec 2024 08:17:27 -0700
+Taints:             dedicated=istio-ingress:NoSchedule
+Unschedulable:      false
+Lease:
+  HolderIdentity:  ip-10-0-2-86.ec2.internal
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 26 Dec 2024 14:43:33 -0700
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 26 Dec 2024 14:40:56 -0700   Thu, 26 Dec 2024 08:17:23 -0700   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 26 Dec 2024 14:40:56 -0700   Thu, 26 Dec 2024 08:17:23 -0700   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 26 Dec 2024 14:40:56 -0700   Thu, 26 Dec 2024 08:17:23 -0700   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 26 Dec 2024 14:40:56 -0700   Thu, 26 Dec 2024 08:17:44 -0700   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:   10.0.2.86
+  InternalDNS:  ip-10-0-2-86.ec2.internal
+  Hostname:     ip-10-0-2-86.ec2.internal
+Capacity:
+  cpu:                2
+  ephemeral-storage:  20893676Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3919544Ki
+  pods:               17
+Allocatable:
+  cpu:                1930m
+  ephemeral-storage:  18181869946
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             3364536Ki
+  pods:               17
+System Info:
+  Machine ID:                 ec2bfa9545e9c62b31514b0a97eb0018
+  System UUID:                ec2bfa95-45e9-c62b-3151-4b0a97eb0018
+  Boot ID:                    a89513e9-15e7-46b9-89d0-7297d3c69cb4
+  Kernel Version:             6.1.119-129.201.amzn2023.x86_64
+  OS Image:                   Amazon Linux 2023.6.20241212
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.7.23
+  Kubelet Version:            v1.31.3-eks-59bf375
+  Kube-Proxy Version:         v1.31.3-eks-59bf375
+ProviderID:                   aws:///us-east-1b/i-004f44824ee145253
+Non-terminated Pods:          (3 in total)
+  Namespace                   Name                            CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                            ------------  ----------  ---------------  -------------  ---
+  kube-system                 aws-node-kxnvc                  50m (2%)      0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 eks-pod-identity-agent-ln7zw    0 (0%)        0 (0%)      0 (0%)           0 (0%)         6h25m
+  kube-system                 kube-proxy-t9gdr                100m (5%)     0 (0%)      0 (0%)           0 (0%)         6h26m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests   Limits
+  --------           --------   ------
+  cpu                150m (7%)  0 (0%)
+  memory             0 (0%)     0 (0%)
+  ephemeral-storage  0 (0%)     0 (0%)
+  hugepages-1Gi      0 (0%)     0 (0%)
+  hugepages-2Mi      0 (0%)     0 (0%)
+Events:              <none>
+
+
