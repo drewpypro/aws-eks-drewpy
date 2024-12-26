@@ -99,7 +99,7 @@ steps:
     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
 
 - name: kubectl-apply
-  image: alpine:latest
+  image: ghcr.io/drewpypro/kubectl-aws-istio:latest
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
@@ -117,19 +117,6 @@ steps:
     - name: terraform
       path: /workspace/terraform
   commands:
-    # Install dependencies
-    - apk add --no-cache bash curl unzip python3 py3-pip git openssl
-    # Install AWS CLI
-    - pip install awscli --break-system-packages
-    # Install kubectl
-    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-    - chmod +x ./kubectl
-    - mv ./kubectl /usr/local/bin/
-    # Install Istio CLI (istioctl)
-    - curl -L https://istio.io/downloadIstio | sh -
-    - mv istio-* /usr/local/istio
-    - export PATH=$PATH:/usr/local/istio/bin
-
     # Configure kubectl for the cluster
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     - export KUBECONFIG=/root/.kube/config
@@ -168,26 +155,22 @@ steps:
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/ingress-gateway-cert.yaml
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/egress-gateway-cert.yaml
 
-
-    # 3. Install ArgoCD
+    # Install ArgoCD
     - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
     - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
 
-    # 4. Apply ArgoCD ConfigMap and RBAC
+    # Apply ArgoCD ConfigMap and RBAC
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-config.yaml
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-rbac.yaml
 
-    # 5. Add ArgoCD Applications
+    # Add ArgoCD Applications
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/apps/
 
-    # 6. Rest of kubernetes manifests
+    # Rest of kubernetes manifests
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
 
-    # 5. Wait and validate
-    # - kubectl wait deployment -n namespace1 app1 --for=condition=Available --timeout=300s
-    - kubectl wait deployment -n namespace2 app2 --for=condition=Available --timeout=300s
-    - kubectl get nodes
+    - kubectl get nodes -o wide
 
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
