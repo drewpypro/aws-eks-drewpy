@@ -171,7 +171,6 @@ steps:
 
     # 3. Install ArgoCD
     - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-    - kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{"data":{"server.insecure":"true"}}'
     - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
 
     # 4. Apply ArgoCD ConfigMap and RBAC
@@ -182,8 +181,6 @@ steps:
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/apps/
 
     # 6. Rest of kubernetes manifests
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/services/
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/deployments/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
 
