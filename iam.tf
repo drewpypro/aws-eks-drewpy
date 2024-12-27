@@ -14,6 +14,7 @@ resource "aws_iam_policy" "test_ec2_policy" {
           "dms:*",
           "dynamodb:*",
           "ec2:*",
+          "eks:*",
           "ec2messages:*",
           "elasticloadbalancing:*",
           "logs:*",

@@ -1,0 +1,24 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  profile: default
+  components:
+    ingressGateways:
+      - name: ingress-gateway
+        enabled: true
+        k8s:
+          service:
+            type: NodePort
+            ports:
+              - name: http
+                port: 80
+                targetPort: 30080
+                nodePort: 30080
+              - name: https
+                port: 443
+                targetPort: 30443
+                nodePort: 30443
+              - name: healthz
+                port: 15021
+                targetPort: 15021
+                nodePort: 31170

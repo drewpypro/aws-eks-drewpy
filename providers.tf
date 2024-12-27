@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 
   # backend "s3" {
@@ -14,4 +18,12 @@ terraform {
   #   skip_s3_checksum            = true
   #   region                      = "us-east-1"
   # }
+}
+
+provider "cloudflare" {
+  api_token = var.CLOUDFLARE_API_TOKEN
+}
+
+provider "aws" {
+  region = var.aws_region
 }

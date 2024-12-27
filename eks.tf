@@ -1,265 +1,220 @@
-# main.tf
-provider "aws" {
-  region = var.aws_region
+locals {
+  paas_subnets = [
+    module.vpc.private_subnets[0],
+    module.vpc.private_subnets[1]
+  ]
 }
 
-# EKS Cluster
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+module "security_groups" {
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.27"
 
-  cluster_name    = var.cluster_name
-  cluster_version = var.cluster_version
+  vpc_id = module.vpc.vpc_id
 
-  vpc_id                                = module.vpc.vpc_id
-  subnet_ids                            = module.vpc.private_subnets
-  cluster_endpoint_public_access        = true
-  cluster_endpoint_private_access       = true
-  cluster_endpoint_public_access_cidrs  = var.SOURCE_SSH_NET
-  cluster_additional_security_group_ids = [aws_security_group.cluster_endpoint_sg.id]
+}
 
-  # Grant the Terraform caller administrative access to the cluster
-  enable_cluster_creator_admin_permissions = true
+resource "aws_launch_template" "worker_node_group" {
+  name_prefix   = "worker-node-group"
 
-  create_iam_role = true
-  #   create_iam_role = false
-  #   iam_role_arn    = aws_iam_role.eks_cluster_role.arn
-
-  eks_managed_node_group_defaults = {
-   iam_role_additional_policies = {
-     AmazonEKSWorkerNodePolicy = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
-     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-   }
+  network_interfaces {
+    security_groups = [module.security_groups.security_group_ids["worker_nodes"]]
   }
 
-  cluster_addons = {
-    coredns                = {}
-    kube-proxy             = {}
-    vpc-cni                = {}
-    eks-pod-identity-agent = {}
-  }
-
-  # EKS Managed Node Group(s)
-  eks_managed_node_groups = {
-    workers = {
-      name = "worker"
-
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
-
-      min_size        = 2
-      max_size        = 2
-      desired_size    = 2
-      security_groups = [aws_security_group.worker_node_sg.id]
-      #   iam_role_arn    = aws_iam_role.eks_node_role.arn
-
-      labels = {
-        role = "worker"
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(
+      var.common_tags,
+      {
+        "Name" = "worker-node"
       }
-    }
-
-    istio-ingress = {
-      name = "istio"
-
-      instance_types = ["t3.medium"]
-      capacity_type  = "ON_DEMAND"
-
-      min_size        = 2
-      max_size        = 2
-      desired_size    = 2
-      security_groups = [aws_security_group.istio_node_sg.id]
-      #   iam_role_arn    = aws_iam_role.eks_node_role.arn
-
-
-      labels = {
-        role = "istio-ingress"
-      }
-
-      taints = [{
-        key    = "dedicated"
-        value  = "istio-ingress"
-        effect = "NO_SCHEDULE"
-      }]
-    }
+    )
   }
+}
+resource "aws_launch_template" "istio_node_group" {
+  name_prefix   = "istio-node-group"
+
+  network_interfaces {
+    security_groups = [module.security_groups.security_group_ids["istio_nodes"]]
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(
+      var.common_tags,
+      {
+        "Name" = "istio-node"
+      }
+    )
+  }
+}
+
+
+resource "aws_eks_cluster" "eks" {
+  name     = var.cluster_name
+  role_arn = aws_iam_role.eks_cluster_role.arn
+
+  vpc_config {
+    subnet_ids         = local.paas_subnets
+    endpoint_public_access = true
+    endpoint_private_access = true
+    public_access_cidrs    = var.SOURCE_SSH_NET
+    security_group_ids     = [module.security_groups.security_group_ids["cluster_endpoint"]]
+  }
+
+  version = var.cluster_version
+
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = var.cluster_name
+    }
+  )
+
+  depends_on = [
+    module.security_groups
+  ]
+}
+
+resource "aws_iam_role" "node_group_role" {
+  name               = "eks-node-group-role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 
   tags = {
-    Environment = var.environment
+    Name = "eks-node-group-role"
   }
 }
 
-# Kubernetes provider configuration
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+resource "aws_iam_role_policy_attachment" "node_group_role_attachments" {
+  for_each = {
+    "AmazonEKSWorkerNodePolicy"            = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+    "AmazonEC2ContainerRegistryReadOnly"   = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+    "AmazonEKS_CNI_Policy"                 = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
   }
+
+  role       = aws_iam_role.node_group_role.name
+  policy_arn = each.value
 }
 
-# Helm provider for installing Istio
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
+# Managed Node Group - Workers
+resource "aws_eks_node_group" "workers" {
+  cluster_name    = aws_eks_cluster.eks.name
+  node_role_arn   = aws_iam_role.node_group_role.arn
+  subnet_ids      = local.paas_subnets
+  instance_types  = ["t3.medium"]
+
+  scaling_config {
+    desired_size = 2
+    max_size     = 2
+    min_size     = 2
+  }
+
+  launch_template {
+    id      = aws_launch_template.worker_node_group.id
+    version = "$Latest"
+  }
+
+  labels = {
+    role = "worker"
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "worker-node-group"
     }
-  }
-}
-
-# Install Istio using Helm
-resource "helm_release" "istio_base" {
-  name       = "istio-base"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "base"
-  namespace  = "istio-system"
+  )
 
   depends_on = [
-    module.eks,
-    kubernetes_namespace.istio_system
+    aws_eks_cluster.eks,
+    aws_launch_template.worker_node_group
   ]
 }
 
-resource "helm_release" "istiod" {
-  name       = "istiod"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "istiod"
-  namespace  = "istio-system"
+# Managed Node Group - Istio Ingress
+resource "aws_eks_node_group" "istio_ingress" {
+  cluster_name    = aws_eks_cluster.eks.name
+  node_role_arn   = aws_iam_role.node_group_role.arn
+  subnet_ids      = local.paas_subnets
+  instance_types  = ["t3.medium"]
 
+  scaling_config {
+    desired_size = 2
+    max_size     = 2
+    min_size     = 2
+  }
+
+  launch_template {
+    id      = aws_launch_template.istio_node_group.id
+    version = "$Latest"
+  }
+
+  labels = {
+    role = "istio-ingress"
+  }
+
+  taint {
+    key    = "dedicated"
+    value  = "istio-ingress"
+    effect = "NO_SCHEDULE"
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name        = "istio-ingress-node-group"
+    }
+  )
   depends_on = [
-    module.eks,
-    kubernetes_namespace.istio_system
+    aws_eks_cluster.eks,
+    aws_launch_template.istio_node_group
   ]
 }
 
-# Install Istio ingress gateway
-resource "helm_release" "istio_ingress" {
-  name       = "istio-ingressgateway"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "gateway"
-  namespace  = kubernetes_namespace.istio_system.metadata[0].name
-
-  set {
-    name  = "gateways.istio-ingressgateway.enabled"
-    value = "true"
-  }
-  depends_on = [helm_release.istiod]
+# Add-Ons (CoreDNS, kube-proxy, VPC CNI, Pod Identity Agent)
+resource "aws_eks_addon" "coredns" {
+  cluster_name = aws_eks_cluster.eks.name
+  addon_name   = "coredns"
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
 
-# Install Istio egress gateway
-resource "helm_release" "istio_egress" {
-  name       = "istio-egressgateway"
-  repository = "https://istio-release.storage.googleapis.com/charts"
-  chart      = "gateway"
-  namespace  = kubernetes_namespace.istio_system.metadata[0].name
-  set {
-    name  = "gateways.istio-egressgateway.enabled"
-    value = "true"
-  }
-  depends_on = [helm_release.istiod]
+resource "aws_eks_addon" "kube_proxy" {
+  cluster_name = aws_eks_cluster.eks.name
+  addon_name   = "kube-proxy"
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
 
-
-# Create Istio System Namespace
-resource "kubernetes_namespace" "istio_system" {
-  metadata {
-    name = "istio-system"
-  }
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name = aws_eks_cluster.eks.name
+  addon_name   = "vpc-cni"
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
 
-resource "kubernetes_namespace" "namespace1" {
-  metadata {
-    name = "namespace1"
-    labels = {
-      istio-injection = "enabled"
-    }
-  }
-}
-
-resource "kubernetes_namespace" "namespace2" {
-  metadata {
-    name = "namespace2"
-    labels = {
-      istio-injection = "enabled"
-    }
-  }
-}
-
-# Example application deployment in namespace1
-resource "kubernetes_deployment" "app1" {
-  metadata {
-    name      = "app1"
-    namespace = kubernetes_namespace.namespace1.metadata[0].name
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = "app1"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "app1"
-        }
-      }
-
-      spec {
-        container {
-          name  = "application"
-          image = "nginx:latest"
-        }
-      }
-    }
-  }
-}
-
-# Example application deployment in namespace2
-resource "kubernetes_deployment" "app2" {
-  metadata {
-    name      = "app2"
-    namespace = kubernetes_namespace.namespace2.metadata[0].name
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = "app2"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "app2"
-        }
-      }
-
-      spec {
-        container {
-          name  = "application"
-          image = "nginx:latest"
-        }
-      }
-    }
-  }
-}
-
-resource "null_resource" "apply_k8s_resources" {
-  depends_on = [module.eks]
-
-  provisioner "local-exec" {
-    command = "kubectl apply -f kubernetes/"
-  }
+resource "aws_eks_addon" "eks_pod_identity_agent" {
+  cluster_name = aws_eks_cluster.eks.name
+  addon_name   = "eks-pod-identity-agent"
+  depends_on   = [
+    aws_eks_cluster.eks,
+    aws_eks_node_group.workers
+    ]
 }
