@@ -16,8 +16,8 @@ spec:
     - "anhinga.drewpy.pro"
     - "gannet.drewpy.pro"
     - "argocd.drewpy.pro"
-    # tls:
-    #   httpsRedirect: true
+    tls:
+      httpsRedirect: true
   - port:
       number: 443
       name: https

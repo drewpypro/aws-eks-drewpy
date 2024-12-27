@@ -1,131 +1,184 @@
 ![eks-drewpy](img/aws_eks_drewpy_highlevel.png)
+![istio-drewpy](img/aws_eks_istio_routing_highlevel.png)
+
+# aws-eks-drewpy
+- [Overview](#overview)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [To Do](#to-do)
+- [Validation](#validation)
+- [Notes](#notes)
+- [References](#references)
+- [Contributing](#contributing)
+- [Disclaimer](#disclaimer)
+- [License](#license)
+
+# Overview
+- Creates necessary infrastructure to deploy drewpy-apps in an aws eks-drewpy cluster. 
+- Builds eks and necessary vpc, iam and security-group infrastructure resources in AWS. 
+- Configures Cloudflare DNS to proxy traffic towards internet nlb. 
+- Configures kubectl, istio and argoCD to deploy 3 bird apps. 
+
+# Project Structure
 
 ```
 aws-eks-drewpy/
-├── eks/
-│   ├── eks.tf               # Main Terraform configuration for the EKS cluster
-│   ├── main.tf              # Provider and base setup (may include variables or VPC setup)
-│   ├── variables.tf         # Define variables like region, cluster name, etc.
-│   ├── outputs.tf           # Outputs for reference (like cluster endpoint, kubeconfig, etc.)
-│   └── iam.tf               # (Optional) IAM roles and policies for EKS
+├── .drone.yml         # Private drone pipeline run config
+├── cloudflare.tf         # Build DNS entries for domains
+├── ec2.tf         # Test EC2 for private local testing (default:off)
+├── eks.tf         # EKS configurations to build clusters and node groups. 
+├── iam.tf         # IAM configuration for various resources.
+├── nlb.tf         # Load balancer configuration
+├── providers.tf         # Terraform providers and base configuration for cloudflare/aws. 
+├── variables.tf         # Define variables like region, cluster name, etc.
+├── vpc.tf         # Defines network infrastructure.
+├── argocd/         # ArgoCD CRD definitions
+│   ├── argocd-config.yaml         # ArgoCD Configuration Definition
+│   ├── argocd-rbac.yaml         # ArgoCD Rbac Config
+│   ├── apps/         # ArgoCD custom App definitions
+│   │   ├── anhinga-application.yaml         # Anhinga App Definition
+│   │   ├── cormorant-application.yaml         # Cormorant App Definition
+│   │   ├── gannet-application.yaml         # Gannet App Definition
 ├── kubernetes/
-│   ├── namespaces/
-│   │   ├── namespace1.yaml  # Namespace configuration for Namespace1
-│   │   └── namespace2.yaml  # Namespace configuration for Namespace2
-│   ├── gateways/
+│   ├── istio-config.yaml 
+│   ├── namespaces/         # k8s core logical construct for grouping resources
+│   │   ├── argocd-namespace.yaml         # Defines argo namespace without istio injection
+│   ├── virtual-services/         # Istio virtualservice CRD
+│   │   ├── argocd-virtual-service.yaml          # define argocd virtual-service
+│   ├── gateways/         # Istio gateway CRD
 │   │   ├── ingress-gateway.yaml  # Istio Ingress Gateway configuration
 │   │   └── egress-gateway.yaml   # Istio Egress Gateway configuration
-│   ├── virtual-services/
-│   │   ├── service1-virtual-service.yaml  # VirtualService for routing to service in Namespace1
-│   │   └── service2-virtual-service.yaml  # VirtualService for routing to service in Namespace2
-│   └── deployments/
-│       ├── app1-deployment.yaml  # Deployment configuration for app in Namespace1
-│       └── app2-deployment.yaml  # Deployment configuration for app in Namespace2
 └── README.md                   # Documentation on how to deploy and test
 ```
 
-# TO DO
-- Istio Created NLB security-group rules
-- SG rules on cluster endpoint and ELB
-- ArgoCD integration
+# Prerequisites
+- Latest versions of terraform, aws, kubectl and istioctl installed. 
+- AWS credentials with roles to build vpc, eks, ec2 and iam. (among others)
+- Cloudflare API token that allows (Zone:Zone:Read, Zone:Zone DNS:Edit )
+- Cloudflare Zone ID (go to your main dashboard and copy zone ID from your list of domains)
+- Public addresses that are authorized connectivity to the eks cluster api. 
+- Or use Drone server pipeline (.drone.yml) or github action workflow pipeline (.github/workflows/terraform-apply.yaml)
 
+# Usage
+- clone repo and set secret variables prior to implementing in your pipeline of choice. 
 
-# References
- - [Control Plane SG](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest#input_cluster_additional_security_group_ids)
+  ```
+  git clone https://github.com/drewpypro/aws-eks-drewpy
 
-# Goals
-- Build EKS cluster
-    - 2 worker nodes
-    - 2 istio ingress nodes
-    - 2 Pods with a namespace each
-    - istio sidecar proxys in each pod.
-- Build Security-Groups with appropriate rules
-- Test Network connectivity (ping, ssh, http)
-    - ec2 to namespace1 application 
-        ```
-        ec2->nlb->istio-ingress->istio-proxy->namespace1
-        ```
-    - ec2 to namespace2 application 
-        ```
-        ec2->nlb->istio-ingress->istio-proxy->namespace2
-        ```
-    - ec2 to pod
-        ```
-        ec2->pod1
-        ```
-    - ec2 to node
-        ```
-        ec2->node1
-        ```
-    - ec2 to eks-api-server
-    - public internet to namespace1 app
-        ```
-        home_net->nlb->istio-ingress->istio-proxy->namespace1
-        ```
-    - Cloudflare WAF to ingress istio gateway. 
-    - GWLB suricata on ingress (IDS or IPS)
+  cd aws-eks-drewpy
+
+  export CLOUDFLARE_API_TOKEN="<your-cloudflare-api-token>
+  export CLOUDFLARE_EMAIL="<your-cloudflare-email-address>
+  export CLOUDFLARE_ZONE_ID="<your-cloudflare-zone-id>
+  export TF_VAR_HOME_IP="<your-public-home-ip>
+
+  terraform apply
+  aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+  export KUBECONFIG=/root/.kube/config
+  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
+  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+  kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager
+  sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/cluster-issuer.yaml
+  kubectl apply -f cert-manager/cluster-issuer.yaml
+  kubectl create namespace istio-system
+  kubectl apply -f kubernetes/namespaces/
+  istioctl install -f kubernetes/istio-config.yaml
+  kubectl apply -f cert-manager/ingress-gateway-cert.yaml
+  kubectl apply -f cert-manager/egress-gateway-cert.yaml
+  kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  kubectl apply -f argocd/argocd-config.yaml
+  kubectl apply -f argocd/argocd-rbac.yaml
+  kubectl apply -f argocd/apps/
+  kubectl apply -f kubernetes/gateways/
+  kubectl apply -f kubernetes/virtual-services/
+  ```
+
+# To Do 
+- Define required apis and permissions for building resources in this repo.
+- Billing output for 24 hours of use. 
+- Create aws-kubectl-istio image for pipeline. 
+- Automate WAF Ruleset resources
 
 # Validation
+- Describe network interfaces (handy for reviewing node level details)
+  ```
+  aws ec2 describe-network-interfaces \
+      --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType, join(`, `, PrivateIpAddresses[?Primary==`false`].PrivateIpAddress)]' \
+      --output table
+  ```    
 
-```
+- Remove existing kube creds and apply new (run once after first time build)
+  ```
+  rm ~/.kube/config
+  aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+  ```
 
-aws ec2 describe-network-interfaces \
-    --query 'NetworkInterfaces[*].[PrivateIpAddress, Description, Groups[0].GroupName, InterfaceType, join(`, `, PrivateIpAddresses[?Primary==`false`].PrivateIpAddress)]' \
-    --output table
+- Get nodes and role label 
+  ```
+  kubectl get nodes -o custom-columns=NAME:.metadata.name,ROLE:.metadata.labels.role
+  NAME                         ROLE
+  ip-10-0-1-144.ec2.internal   worker
+  ip-10-0-1-37.ec2.internal    istio-ingress
+  ip-10-0-2-224.ec2.internal   worker
+  ip-10-0-2-86.ec2.internal    istio-ingress
+  ```
 
-    
-rm ~/.kube/config
-aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+- Various kubectl commands for validation of resources. 
+  ```
+  kubectl get nodes -A
+  kubectl get namespaces -A -o wide
+  kubectl get virtualservice -A
+  kubectl get deployments -A
+  kubectl get pods -A -o wide
+  kubectl get svc -A -o wide
+  kubectl describe gateway egress-gateway -n istio-system
+  kubectl describe gateway ingress-gateway -n istio-system
+  ```
 
-kubectl get nodes -o custom-columns=NAME:.metadata.name,ROLE:.metadata.labels.role
-NAME                         ROLE
-ip-10-0-1-144.ec2.internal   worker
-ip-10-0-1-37.ec2.internal    istio-ingress
-ip-10-0-2-224.ec2.internal   worker
-ip-10-0-2-86.ec2.internal    istio-ingress
+- Validate Istio routing
+  ```
+  istioctl proxy-config routes <ingress-pod-name> -n istio-system
+  istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -n istio-system
+  ```
 
-kubectl get nodes
-kubectl get namespaces
-kubectl get pods -n istio-system
-kubectl get pods -n namespace1
-kubectl get pods -n namespace2
-kubectl get svc
-kubectl get svc -n istio-system
-kubectl describe svc ingress-gateway -n istio-system
-kubectl describe svc istiod -n istio-system
-kubectl describe gateway egress-gateway -n istio-system
-kubectl describe gateway ingress-gateway -n istio-system
-kubectl get virtualservice -n namespace1
-kubectl get virtualservice -n namespace2
-kubectl describe virtualservice service1-virtual-service -n namespace1
-kubectl describe virtualservice service2-virtual-service -n namespace2
+- Retrieve ArgoCD initial secret
+  ```
+  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+  ```
 
-# Testing
+- Debug tools ( DO NOT RUN THESE IN PRODUCTION)
+  ```
+  kubectl exec -it <pod-name> -n <your-app-namespace> -- /bin/bash <command>
+  kubectl port-forward -n <namespace> svc/<svc-name> <localhost-port>:<svc-port>
+  kubectl port-forward -n argocd svc/argocd-server 8080:80
+  ```
 
-kubectl get pods -n <your-app-namespace>
-kubectl exec -it <nginx-pod-name> -n <your-app-namespace> -- /bin/bash
-kubectl logs <nginx-pod-name> -n <your-app-namespace>
-kubectl logs -n istio-system $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}')
+- Retrieve and parse logs
+  ```
+  aws logs create-export-task \
+      --task-name "ExportDNSQueryLogs" \
+      --log-group-name "dns-query-logs" \
+      --from <start-timestamp> \
+      --to <end-timestamp> \
+      --destination "logstorebuck" \
+      --destination-prefix "dns-query-logs"
 
-istioctl proxy-config routes <ingress-pod-name> -n istio-system
-istioctl proxy-config routes $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o jsonpath='{.items[0].metadata.name}') -n istio-system
+  aws logs create-export-task \
+      --task-name "ExportVPCFlowLogs" \
+      --log-group-name "vpc-flow-logs" \
+      --from <start-timestamp> \
+      --to <end-timestamp> \
+      --destination "logstorebuck" \
+      --destination-prefix "vpc-flow-logs"
 
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-kubectl port-forward -n argocd svc/argocd-server 8080:80
-
-kubectl describe nodes
-
-aws s3 cp s3://logstorebucket/ ./exportedlogs --recursive
-find exportedlogs/ -name "*.gz" -exec gunzip {} \;
-find exportedlogs/dnsquerylogs/* -exec cat {} + > dnsqueries.csv
-find exportedlogs/vpcflowlogs/* -exec cat {} + > vpcflowlogs.csv
-find exportedlogs/ -exec cat {} + > flow_logs.csv
-```
+  aws s3 cp s3://logstorebuck/ ./exportedlogs --recursive
+  find exportedlogs/ -name "*.gz" -exec gunzip {} \;
+  find exportedlogs/dnsquerylogs/* -exec cat {} + > dnsqueries.csv
+  find exportedlogs/vpcflowlogs/* -exec cat {} + > vpcflowlogs.csv
+  ```
 
 # Notes
-
-- v1: This is the earliest (and still very common) group of “core” Kubernetes objects (e.g., Service, Namespace, Pod, ConfigMap, etc.).
-- apps/v1: The “apps” API group. This is for newer or more advanced controllers like Deployment, ReplicaSet, DaemonSet, etc.
 
 - **v1** (Core Group)
   - Includes “core” Kubernetes objects:
@@ -164,30 +217,66 @@ find exportedlogs/ -exec cat {} + > flow_logs.csv
   - Appear under different `apiVersion` domains (e.g., `istio.io`, `argoproj.io`, `cert-manager.io`).
   - Only available after installing the CRD(s) into the cluster.
 
-## Namespace (apiVersion: v1, kind: Namespace):
-- Groups resources logically. All resources inside it must have metadata.namespace = <the name>.
-- Deleting a namespace removes all “namespace-scoped” resources in it (pods, services, deployments, etc.).
+- **Namespace (apiVersion: v1, kind: Namespace)**:
+  - Groups resources logically. All resources inside it must have metadata.namespace = <the name>.
+  - Deleting a namespace removes all “namespace-scoped” resources in it (pods, services, deployments, etc.).
 
-## Deployment (apiVersion: apps/v1, kind: Deployment):
-- Manages ReplicaSets and Pods. 
-- You define:
-   - The container image(s)
-   - The number of replicas
-   - Pod labels
-- The Deployment ensures your desired number of Pods is running.
+- **Deployment (apiVersion: apps/v1, kind: Deployment)**:
+  - Manages ReplicaSets and Pods. 
+  - You define:
+    - The container image(s)
+    - The number of replicas
+    - Pod labels
+  - The Deployment ensures your desired number of Pods is running.
 
-## Service (apiVersion: v1, kind: Service):
-- A stable network endpoint for a set of Pods. 
- - Commonly used types include:
-   - ClusterIP (internal-only service)
-   - NodePort (exposes a port on each node)
-   - LoadBalancer (creates a cloud load balancer in some providers)
- - You match Pods by label selector (e.g., app: my-app).
+- **Service (apiVersion: v1, kind: Service)**:
+  - A stable network endpoint for a set of Pods. 
+  - Commonly used types include:
+    - ClusterIP (internal-only service)
+    - NodePort (exposes a port on each node)
+    - LoadBalancer (creates a cloud load balancer in some providers)
+  - You match Pods by label selector (e.g., app: my-app).
 
-## Gateway (apiVersion: networking.istio.io/v1alpha3, kind: Gateway):
-- Defines how inbound or outbound traffic is handled at the edge. You might specify ports, protocols, TLS, etc.
-- In other words, it’s like a specialized Envoy config that replaces or augments something like NGINX Ingress.
+- **Gateway (apiVersion: networking.istio.io/v1alpha3, kind: Gateway)**:
+  - Defines how inbound or outbound traffic is handled at the edge. You might specify ports, protocols, TLS, etc.
+  - In other words, it’s like a specialized Envoy config that replaces or augments something like NGINX Ingress.
 
-## VirtualService (apiVersion: networking.istio.io/v1alpha3, kind: VirtualService):
-- Defines routing rules within the mesh. For example, “traffic to /cormorant goes to the cormorant service on port 80.”
-- Typically bound to a Gateway for external traffic, or used internal to the mesh for service-to-service routing.
+- **VirtualService (apiVersion: networking.istio.io/v1alpha3, kind: VirtualService)**:
+  - Defines routing rules within the mesh. For example, “traffic to /cormorant goes to the cormorant service on port 80.”
+  - Typically bound to a Gateway for external traffic, or used internal to the mesh for service-to-service routing.
+
+# References
+ - [Control Plane SG](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest#input_cluster_additional_security_group_ids)
+ - [AWS CLI Installation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions)
+ - [Kubectl Installation](https://kubernetes.io/docs/tasks/tools/#kubectl)
+ - [Istio Installation](https://istio.io/latest/docs/setup/getting-started/)
+ - [ArgoCD Installation](https://argo-cd.readthedocs.io/en/stable/getting_started/)
+
+# Contributing
+
+- Fork the repository.
+- Create a new branch for your feature or bugfix.
+- Make your changes and test them thoroughly.
+- Submit a pull request for review.
+
+# Disclaimer
+
+This project is provided "as is" without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement. Use this project at your own risk. The maintainers of this repository are not responsible for any damage or issues arising from its use.
+
+# License
+
+This project is licensed under the MIT License. This means you are free to use, modify, and distribute the code as long as credit is given to the original author.
+
+```
+Copyright (c) 2024 drewpypro
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
