@@ -68,11 +68,14 @@ aws-eks-drewpy/
 
   cd aws-eks-drewpy
 
+  export AWS_ACCESS_KEY_ID="<your-aws-key-id>
+  export AWS_SECRET_ACCESS_KEY="<your-aws-secret>
   export CLOUDFLARE_API_TOKEN="<your-cloudflare-api-token>
   export CLOUDFLARE_EMAIL="<your-cloudflare-email-address>
   export CLOUDFLARE_ZONE_ID="<your-cloudflare-zone-id>
   export TF_VAR_HOME_IP="<your-public-home-ip>
 
+  aws configure
   terraform apply
   aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
   export KUBECONFIG=/root/.kube/config
@@ -132,6 +135,7 @@ aws-eks-drewpy/
   kubectl get deployments -A
   kubectl get pods -A -o wide
   kubectl get svc -A -o wide
+  kubectl logs <pod-name> -n <namespace>
   kubectl describe gateway egress-gateway -n istio-system
   kubectl describe gateway ingress-gateway -n istio-system
   ```
