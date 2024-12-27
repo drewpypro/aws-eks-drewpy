@@ -135,6 +135,7 @@ aws-eks-drewpy/
   kubectl get deployments -A
   kubectl get pods -A -o wide
   kubectl get svc -A -o wide
+  kubectl logs <pod-name> -n <namespace>
   kubectl describe gateway egress-gateway -n istio-system
   kubectl describe gateway ingress-gateway -n istio-system
   ```
