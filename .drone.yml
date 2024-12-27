@@ -181,7 +181,7 @@ steps:
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
 
-    - kubectl get nodes -o
+    - kubectl get nodes -o wide
 
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
