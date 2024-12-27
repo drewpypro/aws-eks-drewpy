@@ -99,7 +99,7 @@ steps:
     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
 
 - name: kubectl-apply
-  image: ghcr.io/drewpypro/kubectl-aws-istio:main
+  image: alpine:latest
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
@@ -117,6 +117,17 @@ steps:
     - name: terraform
       path: /workspace/terraform
   commands:
+
+    # Install dependencies
+    - apk add --no-cache bash curl unzip python3 py3-pip git openssl
+    - pip install awscli --break-system-packages
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin/
+    - curl -L https://istio.io/downloadIstio | sh -
+    - mv istio-* /usr/local/istio
+    - export PATH=$PATH:/usr/local/istio/bin
+
     # Configure kubectl for the cluster
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     - export KUBECONFIG=/root/.kube/config
