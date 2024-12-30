@@ -93,7 +93,7 @@ steps:
       from_secret: CLOUDFLARE_ZONE_ID
   commands:
     - apk add --no-cache jq
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
     - terraform init
     - terraform apply -auto-approve
     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
