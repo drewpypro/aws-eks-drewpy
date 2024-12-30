@@ -99,7 +99,7 @@ steps:
     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
 
 - name: helm-apply
-  image: drewpypro/aws-kube-istio:latest
+  image: ghcr.io/drewpypro/aws-kube-istio:latest
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: AWS_ACCESS_KEY_ID
