@@ -135,8 +135,8 @@ steps:
     - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set crds.enabled=true
     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
     ## Apply ClusterIssuer and Certs
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
-    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/certificates.yaml
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/templates/cluster-issuer.yaml
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/templates/certificates.yaml
 
     
     # Install Istio using Helm
