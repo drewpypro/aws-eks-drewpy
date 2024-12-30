@@ -1,7 +1,7 @@
 profile: default
 
 ingressGateway:
-  name: ingress-gateway
+  name: istio-ingressgateway
   ports:
     - name: http
       port: 80
