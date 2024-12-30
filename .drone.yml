@@ -118,20 +118,22 @@ steps:
       path: /workspace/terraform
   commands:
 
+    # Set Path
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/helm
     # Configure kubectl for the cluster
     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
     - export KUBECONFIG=/root/.kube/config
     - kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
     # Install Cert-Manager using Helm
-    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/helm/cert-manager/values.yaml
+    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/values.yaml
     
     # Create Secrets for Cert-Manager
     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
 
     - helm repo add cert-manager https://charts.jetstack.io
     - helm repo update
-    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set crds.enabled=true
+    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 -f cert-manager/values.yaml
     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
 
     
@@ -140,7 +142,7 @@ steps:
     - helm repo update
     - helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace
     - helm upgrade --install istiod istio/istiod --namespace istio-system
-    - helm upgrade --install ingressgateway istio/gateway --namespace istio-system --set service.type=NodePort
+    - helm upgrade --install ingressgateway istio/gateway --namespace istio-system --set service.type=NodePort -f istio/values.yaml
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
     - kubectl -n istio-system rollout status deploy/ingressgateway --timeout=300s
 
@@ -148,37 +150,8 @@ steps:
     # Install ArgoCD using Helm
     - helm repo add argo https://argoproj.github.io/argo-helm
     - helm repo update
-    - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace
+    - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd/values.yaml
     - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
-
-    
-    # # Create namespaces
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
-
-    # # Install Istio
-    # - kubectl -n kube-system rollout status deploy/coredns --timeout=60s
-    # - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
-    # - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
-    # - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
-
-    # # Apply Certs
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/ingress-gateway-cert.yaml
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/egress-gateway-cert.yaml
-
-    # # Install ArgoCD
-    # - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-    # - kubectl wait deployment -n argocd argocd-server --for=condition=Available --timeout=300s
-
-    # # Apply ArgoCD ConfigMap and RBAC
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-config.yaml
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/argocd-rbac.yaml
-
-    # # Add ArgoCD Applications
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/argocd/apps/
-
-    # # Rest of kubernetes manifests
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/gateways/
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/virtual-services/
 
     # Verify Helm deployments
     - helm list -A
