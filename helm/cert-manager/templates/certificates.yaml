@@ -4,11 +4,12 @@ metadata:
   name: ingress-gateway-cert
   namespace: istio-system
 spec:
-  secretName: {{ .Values.certificates.ingress.secretName }}
+  secretName: ingress-gateway-cert
   dnsNames:
-    {{- range .Values.certificates.ingress.dnsNames }}
-    - {{ . }}
-    {{- end }}
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
@@ -20,11 +21,9 @@ metadata:
   name: egress-gateway-cert
   namespace: istio-system
 spec:
-  secretName: {{ .Values.certificates.egress.secretName }}
+  secretName: egress-gateway-cert
   dnsNames:
-    {{- range .Values.certificates.egress.dnsNames }}
-    - {{ . }}
-    {{- end }}
+    - "egress.drewpy.pro"
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
