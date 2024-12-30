@@ -4,10 +4,10 @@ metadata:
   name: letsencrypt
 spec:
   acme:
-    email: {{ .Values.email }}
-    server: https://acme-v02.api.letsencrypt.org/directory
+    email: {{ .Values.clusterIssuer.email }}
+    server: {{ .Values.clusterIssuer.server }}
     privateKeySecretRef:
-      name: letsencrypt-key
+      name: {{ .Values.clusterIssuer.privateKeySecretRef }}
     solvers:
       - dns01:
           cloudflare:

@@ -28,3 +28,8 @@ egressGateway:
     - "*"
   credentialName: egress-gateway-cert
 
+virtualServices:
+  argocd:
+    host: "argocd.drewpy.pro"
+    service: "argocd-server"
+    port: 443

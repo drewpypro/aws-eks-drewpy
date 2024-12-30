@@ -1,9 +1,17 @@
-email: "{{EMAIL_PLACEHOLDER}}"
-domains:
+clusterIssuer:
+  email: "{{EMAIL_PLACEHOLDER}}"
+  server: "https://acme-v02.api.letsencrypt.org/directory"
+  privateKeySecretRef: "letsencrypt-key"
+
+certificates:
   ingress:
-    - "cormorant.drewpy.pro"
-    - "anhinga.drewpy.pro"
-    - "gannet.drewpy.pro"
-    - "argocd.drewpy.pro"
+    secretName: "ingress-gateway-cert"
+    dnsNames:
+      - "cormorant.drewpy.pro"
+      - "anhinga.drewpy.pro"
+      - "gannet.drewpy.pro"
+      - "argocd.drewpy.pro"
   egress:
-    - "egress.drewpy.pro"
+    secretName: "egress-gateway-cert"
+    dnsNames:
+      - "egress.drewpy.pro"
