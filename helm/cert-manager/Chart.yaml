@@ -1,0 +1,4 @@
+apiVersion: v2
+name: cert-manager
+description: Helm chart for Cert-Manager ClusterIssuer and Certificates
+version: 1.0.0

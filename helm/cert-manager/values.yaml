@@ -1,0 +1,9 @@
+email: "{{EMAIL_PLACEHOLDER}}"
+domains:
+  ingress:
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
+  egress:
+    - "egress.drewpy.pro"

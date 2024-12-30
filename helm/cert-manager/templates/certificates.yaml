@@ -1,0 +1,30 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-gateway-cert
+  namespace: istio-system
+spec:
+  secretName: ingress-gateway-cert
+  dnsNames:
+    {{- range .Values.domains.ingress }}
+    - {{ . }}
+    {{- end }}
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: egress-gateway-cert
+  namespace: istio-system
+spec:
+  secretName: egress-gateway-cert
+  dnsNames:
+    {{- range .Values.domains.egress }}
+    - {{ . }}
+    {{- end }}
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer

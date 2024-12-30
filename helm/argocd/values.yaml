@@ -1,0 +1,13 @@
+config:
+  repoURL: https://github.com/drewpypro/aws-eks-drewpy.git
+
+apps:
+  - name: anhinga
+    repoURL: https://github.com/drewpypro/anhinga
+    namespace: anhinga-namespace
+  - name: cormorant
+    repoURL: https://github.com/drewpypro/cormorant
+    namespace: cormorant-namespace
+  - name: gannet
+    repoURL: https://github.com/drewpypro/gannet
+    namespace: gannet-namespace
