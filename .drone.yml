@@ -142,7 +142,7 @@ steps:
     - helm upgrade --install istiod istio/istiod --namespace istio-system
     - helm upgrade --install ingressgateway istio/gateway --namespace istio-system --set service.type=NodePort
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
-    - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
+    - kubectl -n istio-system rollout status deploy/istio-ingressgateway --timeout=300s
 
 
     # Install ArgoCD using Helm
