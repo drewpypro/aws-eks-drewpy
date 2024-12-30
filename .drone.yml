@@ -131,11 +131,7 @@ steps:
 
     - helm repo add cert-manager https://charts.jetstack.io
     - helm repo update
-    - helm upgrade --install cert-manager cert-manager/cert-manager \
-        --namespace cert-manager \
-        --create-namespace \
-        --version v1.16.2 \
-        --set installCRDs=true
+    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set installCRDs=true
     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
 
 
@@ -172,9 +168,7 @@ steps:
     # Install ArgoCD using Helm
     - helm repo add argo https://argoproj.github.io/argo-helm
     - helm repo update
-    - helm upgrade --install argocd argo/argo-cd \
-        --namespace argocd \
-        --create-namespace
+    - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace
     - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
 
     
