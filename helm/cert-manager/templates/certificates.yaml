@@ -4,9 +4,9 @@ metadata:
   name: ingress-gateway-cert
   namespace: istio-system
 spec:
-  secretName: ingress-gateway-cert
+  secretName: {{ .Values.certificates.ingress.secretName }}
   dnsNames:
-    {{- range .Values.domains.ingress }}
+    {{- range .Values.certificates.ingress.dnsNames }}
     - {{ . }}
     {{- end }}
   issuerRef:
@@ -20,9 +20,9 @@ metadata:
   name: egress-gateway-cert
   namespace: istio-system
 spec:
-  secretName: egress-gateway-cert
+  secretName: {{ .Values.certificates.egress.secretName }}
   dnsNames:
-    {{- range .Values.domains.egress }}
+    {{- range .Values.certificates.egress.dnsNames }}
     - {{ . }}
     {{- end }}
   issuerRef:
