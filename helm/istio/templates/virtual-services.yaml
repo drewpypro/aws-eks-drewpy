@@ -7,7 +7,7 @@ spec:
   hosts:
     - {{ .Values.virtualServices.argocd.host }}
   gateways:
-    - istio-system/ingress-gateway
+    - istio-system/istio-ingressgateway
   http:
     - route:
         - destination:

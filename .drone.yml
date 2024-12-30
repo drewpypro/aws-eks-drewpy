@@ -131,29 +131,9 @@ steps:
 
     - helm repo add cert-manager https://charts.jetstack.io
     - helm repo update
-    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set installCRDs=true
+    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set crds.enabled=true
     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
 
-
-    # # Install Cert-Manager
-    # - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
-    # - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
-    # - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
-    # - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
-    # - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
-
-    # # Create Secrets for Cert-Manager
-    # - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
-
-    #  # Replace the placeholder with the email secret
-    # - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
-      
-    # # Add ClusterIssuer for Let's Encrypt
-    # - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
-
-
-    # # Create istio namespace if required dependency
-    # - kubectl create namespace istio-system || true
     
     # Install Istio using Helm
     - helm repo add istio https://istio-release.storage.googleapis.com/charts
