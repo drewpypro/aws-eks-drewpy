@@ -126,22 +126,24 @@ steps:
     - kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
     # Install Cert-Manager using Helm
-    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/values.yaml
+    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/templates/cluster-issuer.yaml
     
     # Create Secrets for Cert-Manager
     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
-
     - helm repo add cert-manager https://charts.jetstack.io
     - helm repo update
-    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 -f cert-manager/values.yaml
+    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set crds.enabled=true
     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+    ## Apply ClusterIssuer and Certs
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/cluster-issuer.yaml
+    - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/cert-manager/certificates.yaml
 
     
     # Install Istio using Helm
     - helm repo add istio https://istio-release.storage.googleapis.com/charts
     - helm repo update
-    - helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace
-    - helm upgrade --install istiod istio/istiod --namespace istio-system
+    - helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace -f istio/values.yaml
+    - helm upgrade --install istiod istio/istiod --namespace istio-system -f istio/values.yaml
     - helm upgrade --install ingressgateway istio/gateway --namespace istio-system --set service.type=NodePort -f istio/values.yaml
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
     - kubectl -n istio-system rollout status deploy/ingressgateway --timeout=300s

@@ -8,4 +8,4 @@ metadata:
     app.kubernetes.io/part-of: argocd
 data:
   repositories: |
-    - url: {{ .Values.config.repoURL }}
+    - url: {{ .Values.repoURL }}
