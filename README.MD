@@ -66,7 +66,7 @@ aws-eks-drewpy/
   ```
   git clone https://github.com/drewpypro/aws-eks-drewpy
 
-  cd aws-eks-drewpy
+  cd aws-eks-drewpy/infrastructure
 
   export AWS_ACCESS_KEY_ID="<your-aws-key-id>
   export AWS_SECRET_ACCESS_KEY="<your-aws-secret>
@@ -180,6 +180,68 @@ aws-eks-drewpy/
   find exportedlogs/ -name "*.gz" -exec gunzip {} \;
   find exportedlogs/dnsquerylogs/* -exec cat {} + > dnsqueries.csv
   find exportedlogs/vpcflowlogs/* -exec cat {} + > vpcflowlogs.csv
+  ```
+
+- Backout 
+  ```
+  ## Destroy All Infrastructure (including kubernetes)
+  terraform destroy --auto-approve yes
+  
+  ## Backout kubernetes configuration
+  kubectl delete -f cert-manager/templates/cluster-issuer.yaml
+  kubectl delete -f cert-manager/templates/certificates.yaml
+
+  helm uninstall cert-manager --namespace cert-manager
+  kubectl delete namespace cert-manager
+
+  helm uninstall istio-base --namespace istio-system
+  helm uninstall istiod --namespace istio-system
+  helm uninstall ingressgateway --namespace istio-system
+  kubectl delete namespace istio-system
+
+  helm uninstall argocd --namespace argocd
+  kubectl delete namespace argocd
+
+  kubectl delete secret cloudflare-api-token -n cert-manager
+
+  helm list -A
+  kubectl get all --all-namespaces
+  kubectl get pods --all-namespaces
+  kubectl get secrets --all-namespaces
+  
+  kubectl delete namespace cert-manager
+  kubectl delete namespace istio-system
+  kubectl delete namespace argocd
+
+  helm repo remove cert-manager
+  helm repo remove istio
+  helm repo remove argo
+  ```
+
+- Secure temporary testing subshell
+  ```
+  env -i bash --norc --noprofile
+  export AWS_ACCESS_KEY_ID="<your-aws-key-id>
+  export AWS_SECRET_ACCESS_KEY="<your-aws-secret>
+  export CLOUDFLARE_API_TOKEN="<your-cloudflare-api-token>
+  export CLOUDFLARE_EMAIL="<your-cloudflare-email-address>
+  export CLOUDFLARE_ZONE_ID="<your-cloudflare-zone-id>
+  export TF_VAR_HOME_IP="<your-public-home-ip>
+  #perform testing and destroy subshell when completed
+  exit
+  ```
+
+- Secure key handling with keepassxcli and temp subshell
+  ```
+  env -i bash --norc -noprofile
+  export PATH=$PATH:/usr/local/bin/aws
+  export API_KEY=$(keepassxc-cli show /path/to/your/database.kdbx "My API Key")
+  export AWS_ACCESS_KEY_ID=$(keepassxc-cli show /path/to/your/database.kdbx "your-aws-key-id")
+  export AWS_SECRET_ACCESS_KEY=$(keepassxc-cli show /path/to/your/database.kdbx "your-aws-secret")
+  export CLOUDFLARE_API_TOKEN=$(keepassxc-cli show /path/to/your/database.kdbx "your-cloudflare-api-token")
+  export CLOUDFLARE_EMAIL=$(keepassxc-cli show /path/to/your/database.kdbx "your-cloudflare-email-address")
+  export CLOUDFLARE_ZONE_ID=$(keepassxc-cli show /path/to/your/database.kdbx "your-cloudflare-zone-id")
+  export TF_VAR_HOME_IP=$(keepassxc-cli show /path/to/your/database.kdbx "your-public-home-ip")
   ```
 
 # Notes
