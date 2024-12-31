@@ -1,7 +1,0 @@
-cni
-gateway
-istiod
-istiod-remote
-ztunnel
-ambient
-base

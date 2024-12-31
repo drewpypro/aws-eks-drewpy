@@ -208,10 +208,6 @@ aws-eks-drewpy/
   kubectl get all --all-namespaces
   kubectl get pods --all-namespaces
   kubectl get secrets --all-namespaces
-  
-  kubectl delete namespace cert-manager
-  kubectl delete namespace istio-system
-  kubectl delete namespace argocd
 
   helm repo remove cert-manager
   helm repo remove istio
