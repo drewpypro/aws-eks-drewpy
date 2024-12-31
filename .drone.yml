@@ -140,13 +140,12 @@ steps:
     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
     
-    
     # Install Istio using Helm
     - helm repo add istio https://istio-release.storage.googleapis.com/charts
     - helm repo update
-    - helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
+    - helm upgrade install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
     - helm upgrade --install istiod istio/istiod -n istio-system --create-namespace
-    - helm install istio-ingress istio/gateway -n istio-ingress
+    - helm upgrade install istio-ingress istio/gateway -n istio-ingress --create-namespace
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
     - kubectl -n istio-ingress rollout status deploy/ingress-gateway --timeout=300s
     - kubectl apply -f manifests/istio-config.yaml
