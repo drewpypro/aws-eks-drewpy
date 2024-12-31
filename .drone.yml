@@ -146,9 +146,9 @@ steps:
     - helm repo update
     - helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
     - helm upgrade --install istiod istio/istiod -n istio-system --create-namespace
-    - helm install istio-ingress istio-ingress -n istio-system
+    - helm install istio-ingress istio/gateway -n istio-ingress
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
-    - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
+    - kubectl -n istio-ingress rollout status deploy/ingress-gateway --timeout=300s
     - kubectl apply -f manifests/istio-config.yaml
 
     ## Apply ClusterIssuer and Certs
