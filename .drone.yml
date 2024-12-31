@@ -66,103 +66,7 @@ steps:
 #     - terraform plan
 
 
-- name: terraform-apply
-  image: hashicorp/terraform:latest
-  network_mode: br1.201
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    TF_VAR_SOURCE_SSH_NET:
-      from_secret: TF_VAR_SOURCE_SSH_NET
-    TF_VAR_PUBLIC_KEY:
-      from_secret: TF_VAR_PUBLIC_KEY
-    TF_VAR_HOME_IP:
-      from_secret: TF_VAR_HOME_IP
-    CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    CLOUDFLARE_EMAIL:
-      from_secret: CLOUDFLARE_EMAIL
-    TF_VAR_CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    TF_VAR_CLOUDFLARE_ZONE_ID:
-      from_secret: CLOUDFLARE_ZONE_ID
-  commands:
-    - apk add --no-cache jq
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
-    - terraform init
-    - terraform apply -auto-approve
-    - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
-
-- name: helm-apply
-  image: ghcr.io/drewpypro/kube-aws-istio:latest
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    CLOUDFLARE_EMAIL:
-      from_secret: CLOUDFLARE_EMAIL
-    TF_VAR_CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    TF_VAR_CLOUDFLARE_ZONE_ID:
-      from_secret: CLOUDFLARE_ZONE_ID
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  commands:
-
-    # Set Path
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/helm
-    # Configure kubectl for the cluster
-    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
-    - export KUBECONFIG=/root/.kube/config
-    - kubectl wait --for=condition=Ready nodes --all --timeout=300s
-
-    # Install Cert-Manager using Helm
-    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/templates/cluster-issuer.yaml
-    
-    # Create Secrets for Cert-Manager
-    - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
-    - helm repo add cert-manager https://charts.jetstack.io
-    - helm repo update
-    - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set crds.enabled=true
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
-
-    
-    # Install Istio using Helm
-    - helm repo add istio https://istio-release.storage.googleapis.com/charts
-    - helm repo update
-    - helm upgrade --install istio-base istio/base --namespace istio-system --create-namespace -f istio/values.yaml
-    - helm upgrade --install istiod istio/istiod --namespace istio-system -f istio/values.yaml
-    - helm upgrade --install ingressgateway istio/gateway --namespace istio-system --set service.type=NodePort -f istio/values.yaml
-    - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
-    - kubectl -n istio-system rollout status deploy/ingressgateway --timeout=300s
-
-    ## Apply ClusterIssuer and Certs
-    - kubectl apply -f cert-manager/templates/cluster-issuer.yaml
-    - kubectl apply -f cert-manager/templates/certificates.yaml
-
-    # Install ArgoCD using Helm
-    - helm repo add argo https://argoproj.github.io/argo-helm
-    - helm repo update
-    - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd/values.yaml
-    - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
-
-    # Verify Helm deployments
-    - helm list -A
-
-    # Verify Kubernetes state
-    - kubectl get nodes -o wide
-    - kubectl get pods --all-namespaces
-
-# - name: terraform-destroy
+# - name: terraform-apply
 #   image: hashicorp/terraform:latest
 #   network_mode: br1.201
 #   volumes:
@@ -188,10 +92,122 @@ steps:
 #     TF_VAR_CLOUDFLARE_ZONE_ID:
 #       from_secret: CLOUDFLARE_ZONE_ID
 #   commands:
+#     - apk add --no-cache jq
 #     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
 #     - terraform init
-#     - terraform destroy -target=aws_cloudwatch_log_group.vpc_flow_log_group -auto-approve
-#     - terraform destroy -auto-approve
+#     - terraform apply -auto-approve
+#     - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
+
+# - name: helm-apply
+#   image: ghcr.io/drewpypro/kube-aws-istio:latest
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     CLOUDFLARE_EMAIL:
+#       from_secret: CLOUDFLARE_EMAIL
+#     TF_VAR_CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     TF_VAR_CLOUDFLARE_ZONE_ID:
+#       from_secret: CLOUDFLARE_ZONE_ID
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   commands:
+
+#     # Set Path
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/helm
+#     # Configure kubectl for the cluster
+#     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+#     - export KUBECONFIG=/root/.kube/config
+#     - kubectl wait --for=condition=Ready nodes --all --timeout=300s
+
+#     # Install Cert-Manager using Helm
+#     - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/templates/cluster-issuer.yaml
+    
+#     # Create Kubernetes secret for the egress gateway certificate
+#     - kubectl create namespace istio-system || true
+
+#     # Create Secrets for Cert-Manager
+#     - helm repo add cert-manager https://charts.jetstack.io
+#     - helm repo update
+#     - helm upgrade --install cert-manager cert-manager/cert-manager --namespace cert-manager --create-namespace --version v1.16.2 --set crds.enabled=true
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+#     # Apply Custom Resources
+#     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
+#     - helm upgrade --install custom-cert-manager ./cert-manager --namespace cert-manager
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+    
+#     # Install Istio using Helm
+#     - helm repo add istio https://istio-release.storage.googleapis.com/charts
+#     - helm repo update
+#     - helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
+#     - helm upgrade --install istiod istio/istiod -n istio-system --create-namespace
+#     - helm install istio-ingress istio-ingress -n istio-system
+    
+#     # Create namespaces
+#     - kubectl apply -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/namespaces/
+
+#     # Install Istio
+#     - kubectl -n kube-system rollout status deploy/coredns --timeout=60s
+#     - istioctl install -f /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/kubernetes/istio-config.yaml --skip-confirmation
+#     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
+#     - kubectl -n istio-system rollout status deploy/ingress-gateway --timeout=300s
+
+#     - helm upgrade --install istio ./istio --namespace istio-system --create-namespace -f istio/values.yaml
+#     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
+#     - kubectl -n istio-system rollout status deploy/ingressgateway --timeout=300s
+
+#     ## Apply ClusterIssuer and Certs
+#     - kubectl apply -f cert-manager/templates/cluster-issuer.yaml
+#     - kubectl apply -f cert-manager/templates/certificates.yaml
+
+#     # Install ArgoCD using Helm
+#     - helm repo add argo https://argoproj.github.io/argo-helm
+#     - helm repo update
+#     - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd/values.yaml
+#     - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
+
+#     # Verify Helm deployments
+#     - helm list -A
+
+#     # Verify Kubernetes state
+#     - kubectl get nodes -o wide
+#     - kubectl get pods --all-namespaces
+
+- name: terraform-destroy
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+    CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    CLOUDFLARE_EMAIL:
+      from_secret: CLOUDFLARE_EMAIL
+    TF_VAR_CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    TF_VAR_CLOUDFLARE_ZONE_ID:
+      from_secret: CLOUDFLARE_ZONE_ID
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
+    - terraform init
+    - terraform destroy -target=aws_cloudwatch_log_group.vpc_flow_log_group -auto-approve
+    - terraform destroy -auto-approve
 
 trigger:
   branch:
