@@ -145,7 +145,7 @@ steps:
     - helm repo update
     - helm upgrade --install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
     - helm upgrade --install istiod istio/istiod -n istio-system --create-namespace
-    - helm upgrade --install istio-ingress istio/gateway -n istio-ingress --create-namespace
+    - helm upgrade --install istio-ingress istio/gateway -n istio-ingress --set gateways.istio-ingressgateway.type=NodePort --create-namespace 
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
     - kubectl -n istio-ingress rollout status deploy/istio-ingress --timeout=300s
     - kubectl apply -f manifests/istio-config.yaml
