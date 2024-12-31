@@ -39,7 +39,7 @@ metadata:
   name: ingress-gateway
   namespace: istio-ingress
   labels:
-    app: istio-ingressgateway
+    app: istio-ingress
     istio: ingress
 spec:
   type: NodePort
@@ -60,4 +60,5 @@ spec:
       nodePort: 31170
       protocol: TCP
   selector:
-    app: istio-ingressgateway
+    app: istio-ingress
+    istio: ingress
