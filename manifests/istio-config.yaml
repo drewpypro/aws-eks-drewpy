@@ -5,7 +5,7 @@ metadata:
   namespace: istio-ingress
 spec:
   selector:
-    istio: ingress
+    istio: ingressgateway
   servers:
   - port:
       number: 80
@@ -40,7 +40,7 @@ metadata:
   namespace: istio-ingress
   labels:
     app: istio-ingress
-    istio: ingress
+    istio: ingressgateway
 spec:
   type: NodePort
   ports:
@@ -61,4 +61,4 @@ spec:
       protocol: TCP
   selector:
     app: istio-ingress
-    istio: ingress
+    istio: ingressgateway
