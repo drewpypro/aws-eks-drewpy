@@ -1,8 +1,5 @@
 server:
+  extraArgs:
+    - --insecure
   config:
-    server:
-      insecure: true
-      url: "https://argocd.drewpy.pro"
-  service:
-    ports:
-      http: 80
+    url: "https://argocd.drewpy.pro"
