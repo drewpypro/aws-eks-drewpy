@@ -11,9 +11,8 @@ spec:
   http:
     - route:
         - destination:
-            host: argocd-server.argocd
+            host: argocd-server.argocd.svc.cluster.local
             port:
-              number: 80
 
 ---
 apiVersion: v1
