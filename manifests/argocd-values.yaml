@@ -2,3 +2,7 @@ server:
   config:
     server:
       insecure: true
+      url: "https://argocd.drewpy.pro"
+  service:
+    ports:
+      http: 80
