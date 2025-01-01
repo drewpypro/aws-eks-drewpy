@@ -77,24 +77,32 @@ aws-eks-drewpy/
 
   aws configure
   terraform apply
+  cd ..
   aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
   export KUBECONFIG=/root/.kube/config
   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
-  kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager
-  sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager/cluster-issuer.yaml
-  kubectl apply -f cert-manager/cluster-issuer.yaml
-  kubectl create namespace istio-system
-  kubectl apply -f kubernetes/namespaces/
-  istioctl install -f kubernetes/istio-config.yaml
-  kubectl apply -f cert-manager/ingress-gateway-cert.yaml
-  kubectl apply -f cert-manager/egress-gateway-cert.yaml
-  kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-  kubectl apply -f argocd/argocd-config.yaml
-  kubectl apply -f argocd/argocd-rbac.yaml
-  kubectl apply -f argocd/apps/
-  kubectl apply -f kubernetes/gateways/
-  kubectl apply -f kubernetes/virtual-services/
+  kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+  kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
+  kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
+  kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
+  helm repo add istio https://istio-release.storage.googleapis.com/charts
+  helm repo update
+  kubectl create namespace istio-system || true
+  helm upgrade --install istio-base istio/base -n istio-system --create-namespace
+  helm upgrade --install istiod istio/istiod -n istio-system --create-namespace
+  helm upgrade --install istio-ingress istio/gateway -f manifests/istio-values.yaml -n istio-ingress --create-namespace 
+  kubectl -n istio-system rollout status deploy/istiod --timeout=300s
+  kubectl -n istio-ingress rollout status deploy/istio-ingress --timeout=300s
+  kubectl apply -f manifests/istio-config.yaml
+  sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" manifests/cert-manager.yaml 
+  kubectl apply -f manifests/cert-manager.yaml
+  kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+  helm repo add argo https://argoproj.github.io/argo-helm
+  helm repo update
+  helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f manifests/argocd-values.yaml
+  kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
+  kubectl apply -f manifests/argocd-install.yaml
   ```
 
 # To Do 
@@ -151,7 +159,7 @@ aws-eks-drewpy/
   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
   ```
 
-- Debug tools ( DO NOT RUN THESE IN PRODUCTION)
+- Debug tools ( DO NOT RUN THESE IN PRODUCTION )
   ```
   kubectl exec -it <pod-name> -n <your-app-namespace> -- /bin/bash <command>
   kubectl port-forward -n <namespace> svc/<svc-name> <localhost-port>:<svc-port>
@@ -182,33 +190,24 @@ aws-eks-drewpy/
   find exportedlogs/vpcflowlogs/* -exec cat {} + > vpcflowlogs.csv
   ```
 
-- Backout 
+- Backout (Helm)
   ```
   ## Destroy All Infrastructure (including kubernetes)
   terraform destroy --auto-approve yes
-  
-  ## Backout kubernetes configuration
-  kubectl delete -f cert-manager/templates/cluster-issuer.yaml
-  kubectl delete -f cert-manager/templates/certificates.yaml
 
-  helm uninstall cert-manager --namespace cert-manager
-  kubectl delete namespace cert-manager
-
-  helm uninstall istio-base --namespace istio-system
-  helm uninstall istiod --namespace istio-system
-  helm uninstall ingressgateway --namespace istio-system
-  kubectl delete namespace istio-system
-
-  helm uninstall argocd --namespace argocd
-  kubectl delete namespace argocd
-
+  kubectl delete -f manifests/argocd-install.yaml
+  helm uninstall argocd -n argocd
+  kubectl delete namespace argocd --wait
+  kubectl delete -f manifests/cert-manager.yaml
   kubectl delete secret cloudflare-api-token -n cert-manager
-
-  helm list -A
-  kubectl get all --all-namespaces
-  kubectl get pods --all-namespaces
-  kubectl get secrets --all-namespaces
-
+  kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+  kubectl delete -f manifests/istio-config.yaml
+  helm uninstall istio-ingress -n istio-ingress
+  helm uninstall istiod -n istio-system
+  helm uninstall istio-base -n istio-system
+  kubectl delete namespace istio-ingress --wait
+  kubectl delete namespace istio-system --wait
+  kubectl delete namespace cormorant-namespace gannet-namespace anhinga-namespace
   helm repo remove cert-manager
   helm repo remove istio
   helm repo remove argo
