@@ -12,10 +12,10 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "cormorant.drewpy.pro"
-    - "anhinga.drewpy.pro"
-    - "gannet.drewpy.pro"
-    - "argocd.drewpy.pro"
+    - "cormorant-test.drewpy.pro"
+    - "anhinga-test.drewpy.pro"
+    - "gannet-test.drewpy.pro"
+    - "argocd-test.drewpy.pro"
     tls:
       httpsRedirect: true
   - port:
@@ -23,10 +23,10 @@ spec:
       name: https
       protocol: HTTPS
     hosts:
-    - "cormorant.drewpy.pro"
-    - "anhinga.drewpy.pro"
-    - "gannet.drewpy.pro"
-    - "argocd.drewpy.pro"
+    - "cormorant-test.drewpy.pro"
+    - "anhinga-test.drewpy.pro"
+    - "gannet-test.drewpy.pro"
+    - "argocd-test.drewpy.pro"
     tls:
       mode: SIMPLE
       credentialName: ingress-gateway-cert

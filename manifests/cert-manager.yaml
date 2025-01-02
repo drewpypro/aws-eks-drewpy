@@ -23,10 +23,10 @@ metadata:
 spec:
   secretName: ingress-gateway-cert
   dnsNames:
-    - "cormorant.drewpy.pro"
-    - "anhinga.drewpy.pro"
-    - "gannet.drewpy.pro"
-    - "argocd.drewpy.pro"
+    - "cormorant-test.drewpy.pro"
+    - "anhinga-test.drewpy.pro"
+    - "gannet-test.drewpy.pro"
+    - "argocd-test.drewpy.pro"
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
@@ -39,7 +39,7 @@ metadata:
 spec:
   secretName: egress-gateway-cert
   dnsNames:
-    - "egress.drewpy.pro"
+    - "egress-test.drewpy.pro"
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
