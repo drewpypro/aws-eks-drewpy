@@ -5,4 +5,4 @@ server:
     ports:
       http: 80
   config:
-    url: "https://argocd.drewpy.pro"
+    url: "https://argocd-test.drewpy.pro"

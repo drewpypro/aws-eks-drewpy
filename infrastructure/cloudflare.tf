@@ -1,10 +1,10 @@
 resource "cloudflare_record" "istio_ingress_records" {
   for_each = {
-    "cormorant" = "cormorant.drewpy.pro"
-    "anhinga"   = "anhinga.drewpy.pro"
-    "gannet"    = "gannet.drewpy.pro"
-    "argocd"    = "argocd.drewpy.pro"
-    "egress"    = "egress.drewpy.pro"
+    "cormorant" = "cormorant-test.drewpy.pro"
+    "anhinga"   = "anhinga-test.drewpy.pro"
+    "gannet"    = "gannet-test.drewpy.pro"
+    "argocd"    = "argocd-test.drewpy.pro"
+    "egress"    = "egress-test.drewpy.pro"
   }
 
   zone_id = var.CLOUDFLARE_ZONE_ID
