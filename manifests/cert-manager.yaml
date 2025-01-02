@@ -43,3 +43,54 @@ spec:
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  replicas: 1
+  template:
+    spec:
+      nodeSelector:
+        role: istio-ingress
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: istio-ingress
+          effect: NoSchedule
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-webhook
+  namespace: cert-manager
+spec:
+  replicas: 1
+  template:
+    spec:
+      nodeSelector:
+        role: istio-ingress
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: istio-ingress
+          effect: NoSchedule
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-cainjector
+  namespace: cert-manager
+spec:
+  replicas: 1
+  template:
+    spec:
+      nodeSelector:
+        role: istio-ingress
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: istio-ingress
+          effect: NoSchedule

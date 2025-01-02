@@ -16,3 +16,12 @@ service:
     targetPort: 15021
     nodePort: 31170
     protocol: TCP
+
+nodeSelector:
+  role: istio-ingress
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: istio-ingress
+    effect: NoSchedule
