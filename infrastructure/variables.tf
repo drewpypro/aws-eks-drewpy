@@ -90,3 +90,30 @@ variable "CLOUDFLARE_ZONE_ID" {
   type        = string
   description = "Cloudflare Zone ID"
 }
+
+# Define a list of services that need VPC endpoints
+variable "services" {
+  default = ["autoscaling", "dms", "ec2", "ec2messages",
+    "elasticloadbalancing", "logs", "monitoring", "rds",
+    "secretsmanager", "sns", "sqs", "ssm",
+  "ssmmessages", "sts", ]
+}
+
+variable "gateway_services" {
+  default = ["dynamodb", "s3"]
+}
+
+variable "ORG_ID" {
+  description = "org-id must be configured in your aws accounts and supplied as a variable"
+  type        = string
+}
+
+variable "ORG_PATH" {
+  description = "OU Path must be configured in your aws accounts and supplied as a variable"
+  type        = string
+}
+
+variable "ACCOUNT_ID" {
+  description = "An account must be created prior to test and this is mandatory variable"
+  type        = string
+}
