@@ -6,3 +6,26 @@ server:
       http: 80
   config:
     url: "https://argocd-test.drewpy.pro"
+  nodeSelector: 
+    role: worker
+  tolerations: 
+    - key: dedicated
+      operator: Equal
+      value: worker
+      effect: NoSchedule
+applicationController:
+  nodeSelector:
+    role: worker
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: worker
+      effect: NoSchedule
+repoServer:
+  nodeSelector:
+    role: worker
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: worker
+      effect: NoSchedule
