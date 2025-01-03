@@ -38,12 +38,11 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
   )
 
   security_group_ids = [module.security_groups.security_group_ids[each.key]]
-  subnet_ids         = [module.vpc.private_subnets[0]]
+  subnet_ids         = module.vpc.private_subnets
 
   depends_on = [null_resource.policy_trigger, null_resource.monitoring_policy_trigger]
 }
 
-# Gateway Endpoints for S3 and RDS
 resource "aws_vpc_endpoint" "gateway_endpoints" {
   for_each          = toset(var.gateway_services)
   vpc_id            = module.vpc.vpc_id
