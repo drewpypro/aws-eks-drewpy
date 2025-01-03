@@ -38,7 +38,7 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
   )
 
   security_group_ids = [module.security_groups.security_group_ids[each.key]]
-  subnet_ids         = module.vpc.private_subnets
+  subnet_ids         = [module.vpc.private_subnets[0]]
 
   depends_on = [null_resource.policy_trigger, null_resource.monitoring_policy_trigger]
 }
