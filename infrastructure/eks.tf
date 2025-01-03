@@ -221,5 +221,5 @@ resource "aws_eks_addon" "eks_pod_identity_agent" {
 
 output "security_group_ids" {
   description = "Map of service names to security group IDs"
-  value       = { for key, sg in aws_security_group.security_groups : key => sg.id }
+  value       = { for key, sg in module.security_groups : key => sg.id }
 }
