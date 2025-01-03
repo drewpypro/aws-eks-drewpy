@@ -5,7 +5,7 @@ server:
     ports:
       http: 80
   config:
-    url: "https://argocd-test.drewpy.pro"
+    url: "https://argocd.drewpy.pro"
   nodeSelector: 
     role: worker
   tolerations: 
