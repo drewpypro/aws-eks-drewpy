@@ -24,36 +24,27 @@
 
 ```
 aws-eks-drewpy/
-├── .drone.yml         # Private drone pipeline run config
-├── cloudflare.tf         # Build DNS entries for domains
-├── ec2.tf         # Test EC2 for private local testing (default:off)
-├── eks.tf         # EKS configurations to build clusters and node groups. 
-├── iam.tf         # IAM configuration for various resources.
-├── nlb.tf         # Load balancer configuration
-├── providers.tf         # Terraform providers and base configuration for cloudflare/aws. 
-├── variables.tf         # Define variables like region, cluster name, etc.
-├── vpc.tf         # Defines network infrastructure.
-├── argocd/         # ArgoCD CRD definitions
-│   ├── argocd-config.yaml         # ArgoCD Configuration Definition
-│   ├── argocd-rbac.yaml         # ArgoCD Rbac Config
-│   ├── apps/         # ArgoCD custom App definitions
-│   │   ├── anhinga-application.yaml         # Anhinga App Definition
-│   │   ├── cormorant-application.yaml         # Cormorant App Definition
-│   │   ├── gannet-application.yaml         # Gannet App Definition
-├── kubernetes/
-│   ├── istio-config.yaml 
-│   ├── namespaces/         # k8s core logical construct for grouping resources
-│   │   ├── argocd-namespace.yaml         # Defines argo namespace without istio injection
-│   ├── virtual-services/         # Istio virtualservice CRD
-│   │   ├── argocd-virtual-service.yaml          # define argocd virtual-service
-│   ├── gateways/         # Istio gateway CRD
-│   │   ├── ingress-gateway.yaml  # Istio Ingress Gateway configuration
-│   │   └── egress-gateway.yaml   # Istio Egress Gateway configuration
-└── README.md                   # Documentation on how to deploy and test
+├── .drone.yml                 # Private drone pipeline run config
+├── infrastructure/            # TF Code that builds AWS and Cloudflare Infrastructure.
+│   ├── cloudflare.tf          # Build DNS entries for domains
+│   ├── ec2.tf                 # Test EC2 for private local testing (default:off)
+│   ├── eks.tf                 # EKS configurations to build clusters and node groups. 
+│   ├── iam.tf                 # IAM configuration for various resources.
+│   ├── nlb.tf                 # Load balancer configuration
+│   ├── providers.tf           # Terraform providers and base configuration for cloudflare/aws. 
+│   ├── variables.tf           # Define variables like region, cluster name, etc.
+│   ├── vpc.tf                 # Defines network infrastructure.
+├── manifests/                 # k8s and helm manifests
+│   ├── argocd-install.yaml    # ArgoCD Configuration Definition
+│   ├── argocd-values.yaml     # ArgoCD Helm values
+│   ├── cert-manager.yaml      # Cert-manager manifests
+│   ├── istio-config.yaml      # Istio Configuration Definition
+│   ├── istio-values.yaml      # Istio Helm values 
+└── README.md                  # Documentation on how to deploy and test
 ```
 
 # Prerequisites
-- Latest versions of terraform, aws, kubectl and istioctl installed. 
+- Latest versions of terraform, aws, kubectl, helm and istioctl installed. 
 - AWS credentials with roles to build vpc, eks, ec2 and iam. (among others)
 - Cloudflare API token that allows (Zone:Zone:Read, Zone:Zone DNS:Edit )
 - Cloudflare Zone ID (go to your main dashboard and copy zone ID from your list of domains)
@@ -108,8 +99,23 @@ aws-eks-drewpy/
 # To Do 
 - Define required apis and permissions for building resources in this repo.
 - Billing output for 24 hours of use. 
-- Create aws-kubectl-istio image for pipeline. 
+- Add VPC Endpoints/Gateways Module
+- Create outbound web proxy solution.
+- Python script to automate log exports and parsing into repo. 
 - Automate WAF Ruleset resources
+- IAM Testing/Hardening
+  - Node/Pod/Container to AWS APIs using instance profile. 
+  - Node/Pod/Container to AWS APIs using svc account impersonation. 
+- Pod Security
+  - k8s network policy
+  - AWS VPC CNI Pod SGs
+  - Istio Authz Policy
+  - Test other CNI.
+- Istio Gateways
+  - Ingress policy microsegmentation. 
+  - Egress policy and decryption.
+  - Logging/Monitoring
+  - Inspection path capability
 
 # Validation
 - Describe network interfaces (handy for reviewing node level details)
@@ -244,71 +250,76 @@ aws-eks-drewpy/
   ```
 
 # Notes
+<details>
+  <summary>Click to expand</summary>
 
-- **v1** (Core Group)
-  - Includes “core” Kubernetes objects:
-    - Services
-    - Namespaces
-    - Pods
-    - ConfigMaps
-    - Secrets
-    - etc.
+  - **v1** (Core Group)
+    - Includes “core” Kubernetes objects:
+      - Services
+      - Namespaces
+      - Pods
+      - ConfigMaps
+      - Secrets
+      - etc.
 
-- **apps/v1** (Apps API Group)
-  - Includes more advanced workload controllers:
-    - Deployments
-    - StatefulSets
-    - DaemonSets
-    - ReplicaSets
-    - etc.
+  - **apps/v1** (Apps API Group)
+    - Includes more advanced workload controllers:
+      - Deployments
+      - StatefulSets
+      - DaemonSets
+      - ReplicaSets
+      - etc.
 
-- **batch/v1** (Batch API Group)
-  - Includes:
-    - Jobs
-    - CronJobs
+  - **batch/v1** (Batch API Group)
+    - Includes:
+      - Jobs
+      - CronJobs
 
-- **autoscaling/v2** (Autoscaling API Group)
-  - Includes:
-    - HorizontalPodAutoscalers (HPAs)
+  - **autoscaling/v2** (Autoscaling API Group)
+    - Includes:
+      - HorizontalPodAutoscalers (HPAs)
 
-- **networking.k8s.io/v1** (Networking API Group)
-  - Includes:
-    - Ingress and IngressClass
-    - NetworkPolicy
-  - Built-in resources for controlling external traffic (Ingress) and cluster networking policies.
+  - **networking.k8s.io/v1** (Networking API Group)
+    - Includes:
+      - Ingress and IngressClass
+      - NetworkPolicy
+    - Built-in resources for controlling external traffic (Ingress) and cluster networking policies.
 
-- **Custom Resource Definitions (CRDs)**:
-  - Introduce _additional_ resource types from third-party projects or operators (e.g., Istio, ArgoCD, Cert-Manager).
-  - Appear under different `apiVersion` domains (e.g., `istio.io`, `argoproj.io`, `cert-manager.io`).
-  - Only available after installing the CRD(s) into the cluster.
+  - **Custom Resource Definitions (CRDs)**:
+    - Introduce _additional_ resource types from third-party projects or operators (e.g., Istio, ArgoCD, Cert-Manager).
+    - Appear under different `apiVersion` domains (e.g., `istio.io`, `argoproj.io`, `cert-manager.io`).
+    - Only available after installing the CRD(s) into the cluster.
 
-- **Namespace (apiVersion: v1, kind: Namespace)**:
-  - Groups resources logically. All resources inside it must have metadata.namespace = <the name>.
-  - Deleting a namespace removes all “namespace-scoped” resources in it (pods, services, deployments, etc.).
+  - **Namespace (apiVersion: v1, kind: Namespace)**:
+    - Groups resources logically. All resources inside it must have metadata.namespace = <the name>.
+    - Deleting a namespace removes all “namespace-scoped” resources in it (pods, services, deployments, etc.).
 
-- **Deployment (apiVersion: apps/v1, kind: Deployment)**:
-  - Manages ReplicaSets and Pods. 
-  - You define:
-    - The container image(s)
-    - The number of replicas
-    - Pod labels
-  - The Deployment ensures your desired number of Pods is running.
+  - **Deployment (apiVersion: apps/v1, kind: Deployment)**:
+    - Manages ReplicaSets and Pods. 
+    - You define:
+      - The container image(s)
+      - The number of replicas
+      - Pod labels
+    - The Deployment ensures your desired number of Pods is running.
 
-- **Service (apiVersion: v1, kind: Service)**:
-  - A stable network endpoint for a set of Pods. 
-  - Commonly used types include:
-    - ClusterIP (internal-only service)
-    - NodePort (exposes a port on each node)
-    - LoadBalancer (creates a cloud load balancer in some providers)
-  - You match Pods by label selector (e.g., app: my-app).
+  - **Service (apiVersion: v1, kind: Service)**:
+    - A stable network endpoint for a set of Pods. 
+    - Commonly used types include:
+      - ClusterIP (internal-only service)
+      - NodePort (exposes a port on each node)
+      - LoadBalancer (creates a cloud load balancer in some providers)
+    - You match Pods by label selector (e.g., app: my-app).
 
-- **Gateway (apiVersion: networking.istio.io/v1alpha3, kind: Gateway)**:
-  - Defines how inbound or outbound traffic is handled at the edge. You might specify ports, protocols, TLS, etc.
-  - In other words, it’s like a specialized Envoy config that replaces or augments something like NGINX Ingress.
+  - **Gateway (apiVersion: networking.istio.io/v1alpha3, kind: Gateway)**:
+    - Defines how inbound or outbound traffic is handled at the edge. You might specify ports, protocols, TLS, etc.
+    - In other words, it’s like a specialized Envoy config that replaces or augments something like NGINX Ingress.
 
-- **VirtualService (apiVersion: networking.istio.io/v1alpha3, kind: VirtualService)**:
-  - Defines routing rules within the mesh. For example, “traffic to /cormorant goes to the cormorant service on port 80.”
-  - Typically bound to a Gateway for external traffic, or used internal to the mesh for service-to-service routing.
+  - **VirtualService (apiVersion: networking.istio.io/v1alpha3, kind: VirtualService)**:
+    - Defines routing rules within the mesh. For example, “traffic to /cormorant goes to the cormorant service on port 80.”
+    - Typically bound to a Gateway for external traffic, or used internal to the mesh for service-to-service routing.
+</details>
+
+
 
 # References
  - [Control Plane SG](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest#input_cluster_additional_security_group_ids)
@@ -333,7 +344,7 @@ This project is provided "as is" without warranty of any kind, express or implie
 This project is licensed under the MIT License. This means you are free to use, modify, and distribute the code as long as credit is given to the original author.
 
 ```
-Copyright (c) 2024 drewpypro
+Copyright (c) 2025 drewpypro
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -344,4 +355,12 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
