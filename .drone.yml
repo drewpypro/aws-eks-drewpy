@@ -61,7 +61,7 @@ steps:
     TF_VAR_CLOUDFLARE_ZONE_ID:
       from_secret: CLOUDFLARE_ZONE_ID
   commands:
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
     - terraform init
     - terraform plan
 
