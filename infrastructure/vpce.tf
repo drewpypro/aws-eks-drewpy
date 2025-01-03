@@ -46,10 +46,10 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
 # Gateway Endpoints for S3 and RDS
 resource "aws_vpc_endpoint" "gateway_endpoints" {
   for_each          = toset(var.gateway_services)
-  vpc_id            = aws_vpc.test_vpc.id
+  vpc_id            = module.vpc.vpc_id
   service_name      = "com.amazonaws.${var.aws_region}.${each.key}"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = [aws_route_table.test_rt_1.id]
+  route_table_ids   = module.vpc.private_route_table_ids
 
   policy = templatefile(
     "${path.module}/policies/s3_vpce_policy.json",
