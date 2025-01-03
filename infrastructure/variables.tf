@@ -95,7 +95,7 @@ variable "CLOUDFLARE_ZONE_ID" {
 variable "services" {
   default = ["autoscaling", "dms", "ec2", "ec2messages",
     "elasticloadbalancing", "logs", "monitoring", "rds",
-    "secretsmanager", "sns", "sqs", "ssm",
+    "kms", "sns", "sqs", "ssm",
   "ssmmessages", "sts", ]
 }
 
