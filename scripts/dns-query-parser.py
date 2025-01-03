@@ -42,5 +42,5 @@ def parse_dns_logs(input_file, output_file):
             writer.writerow([query_name, query_type, rcode, srcaddr, count])
 
 if __name__ == "__main__":
-    parse_dns_logs('12-26-24-dnsqueries.csv', 'dns_query_report.csv')
+    parse_dns_logs('tests/1-3-2025-dnsquerylogs.csv', '1-3-2024-dns_query_report.csv')
     print("Report generated successfully!")

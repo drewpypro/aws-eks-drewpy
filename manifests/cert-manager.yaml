@@ -1,0 +1,45 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    email: "{{EMAIL_PLACEHOLDER}}"
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-gateway-cert
+  namespace: istio-ingress
+spec:
+  secretName: ingress-gateway-cert
+  dnsNames:
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: egress-gateway-cert
+  namespace: istio-ingress
+spec:
+  secretName: egress-gateway-cert
+  dnsNames:
+    - "egress.drewpy.pro"
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer

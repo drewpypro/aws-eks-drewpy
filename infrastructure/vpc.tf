@@ -76,7 +76,7 @@ resource "aws_flow_log" "vpc_flow_log" {
   vpc_id               = module.vpc.vpc_id
   traffic_type         = "ALL"
 
-  depends_on = [aws_cloudwatch_log_group.vpc_flow_log_group]
+  depends_on = [module.vpc]
 
 }
 

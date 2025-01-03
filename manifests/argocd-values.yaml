@@ -1,0 +1,31 @@
+server:
+  extraArgs:
+    - --insecure
+  service:
+    ports:
+      http: 80
+  config:
+    url: "https://argocd.drewpy.pro"
+  nodeSelector: 
+    role: worker
+  tolerations: 
+    - key: dedicated
+      operator: Equal
+      value: worker
+      effect: NoSchedule
+applicationController:
+  nodeSelector:
+    role: worker
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: worker
+      effect: NoSchedule
+repoServer:
+  nodeSelector:
+    role: worker
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: worker
+      effect: NoSchedule

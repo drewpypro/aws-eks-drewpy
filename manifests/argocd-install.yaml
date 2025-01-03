@@ -1,0 +1,99 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: argocd-virtual-service
+  namespace: argocd
+spec:
+  hosts:
+    - argocd.drewpy.pro
+  gateways:
+    - istio-ingress/ingress-gateway
+  http:
+      - route:
+        - destination:
+            host: argocd-server.argocd.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  repositories: |
+    - url: https://github.com/drewpypro/aws-eks-drewpy.git
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-admin
+  namespace: argocd
+subjects:
+- kind: ServiceAccount
+  name: argocd-server
+  namespace: argocd
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: anhinga
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/drewpypro/anhinga
+    targetRevision: main
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: anhinga-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cormorant
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/drewpypro/cormorant
+    targetRevision: main
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cormorant-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gannet
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/drewpypro/gannet
+    targetRevision: main
+    path: manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gannet-namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
