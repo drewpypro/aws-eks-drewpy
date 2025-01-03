@@ -127,12 +127,16 @@ aws-eks-drewpy/
 
 - Get nodes and role label 
   ```
+  kubectl describe node -A | grep 'Name:\|role'
   kubectl get nodes -o custom-columns=NAME:.metadata.name,ROLE:.metadata.labels.role
   NAME                         ROLE
   ip-10-0-1-144.ec2.internal   worker
   ip-10-0-1-37.ec2.internal    istio-ingress
   ip-10-0-2-224.ec2.internal   worker
   ip-10-0-2-86.ec2.internal    istio-ingress
+  kubectl get nodes -l role=worker -o custom-columns=NAME:.metadata.name | tail -n +2 | xargs -I {} kubectl get pods -A --field-selector spec.nodeName={} -o wide
+  kubectl get nodes -l role=istio-ingress -o custom-columns=NAME:.metadata.name | tail -n +2 | xargs -I {} kubectl get pods -A --field-selector spec.nodeName={} -o wide
+
   ```
 
 - Various kubectl commands for validation of resources. 
