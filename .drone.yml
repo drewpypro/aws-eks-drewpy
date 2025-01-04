@@ -207,6 +207,11 @@ steps:
       from_secret: CLOUDFLARE_API_TOKEN
     TF_VAR_CLOUDFLARE_ZONE_ID:
       from_secret: CLOUDFLARE_ZONE_ID
+      from_secret: TF_VAR_ORG_ID
+    TF_VAR_ORG_PATH:
+      from_secret: TF_VAR_ORG_PATH
+    TF_VAR_ACCOUNT_ID:
+      from_secret: TF_VAR_ACCOUNT_ID
   commands:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
     - terraform init
