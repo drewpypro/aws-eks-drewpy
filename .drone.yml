@@ -207,7 +207,7 @@ steps:
       from_secret: CLOUDFLARE_API_TOKEN
     TF_VAR_CLOUDFLARE_ZONE_ID:
       from_secret: CLOUDFLARE_ZONE_ID
-     TF_VAR_ORG_ID:
+    TF_VAR_ORG_ID:
       from_secret: TF_VAR_ORG_ID
     TF_VAR_ORG_PATH:
       from_secret: TF_VAR_ORG_PATH
