@@ -138,7 +138,8 @@ resource "aws_eks_node_group" "workers" {
 
   depends_on = [
     aws_eks_cluster.eks,
-    aws_launch_template.worker_node_group
+    aws_launch_template.worker_node_group,
+    aws_vpc_endpoint.service_vpc_endpoints
   ]
 }
 
@@ -178,7 +179,8 @@ resource "aws_eks_node_group" "istio_ingress" {
   )
   depends_on = [
     aws_eks_cluster.eks,
-    aws_launch_template.istio_node_group
+    aws_launch_template.istio_node_group,
+    aws_vpc_endpoint.service_vpc_endpoints
   ]
 }
 
