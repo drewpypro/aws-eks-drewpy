@@ -25,9 +25,9 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
   private_dns_enabled = true
 
   policy = templatefile(
-    each.key == "monitoring"
-    ? "${path.module}/policies/monitoring_vpce_policy.json"
-    : "${path.module}/policies/vpce_policy.json",
+    each.key == "monitoring" ? "${path.module}/policies/monitoring_vpce_policy.json" :
+    each.key == "ecr" ? "${path.module}/policies/ecr_vpce_policy.json" :
+    "${path.module}/policies/vpce_policy.json",
     {
       service_name = each.key,
       ACCOUNT_ID   = var.ACCOUNT_ID,
