@@ -21,7 +21,10 @@
                 "ecr:BatchGetImage",
                 "ecr:GetDownloadUrlForLayer"
             ],
-            "Resource": "arn:aws:ecr:${region}:602401143452:repository/*"
+            "Resource": [
+                "arn:aws:ecr:${region}:602401143452:repository/*",
+                "arn:aws:ecr:${region}:602401143452:repository/amazon/aws-network-policy-agent"
+            ]
         }
     ]
 }
