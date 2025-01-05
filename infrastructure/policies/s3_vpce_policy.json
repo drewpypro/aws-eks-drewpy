@@ -10,7 +10,9 @@
         ],
         "Resource": [
           "arn:aws:s3:::al2023-repos-us-east-1-de612dc2/*",
-          "arn:aws:s3:::al2023-repos-us-east-1-de612dc2"
+          "arn:aws:s3:::al2023-repos-us-east-1-de612dc2",
+          "prod-us-east-1-starport-layer-bucket/*",
+          "prod-us-east-1-starport-layer-bucket"
         ]
       },
       {
