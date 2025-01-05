@@ -26,7 +26,8 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
 
   policy = templatefile(
     each.key == "monitoring" ? "${path.module}/policies/monitoring_vpce_policy.json" :
-    each.key == "ecr" ? "${path.module}/policies/ecr_vpce_policy.json" :
+    each.key == "ecr.api" ? "${path.module}/policies/ecr_vpce_policy.json" :
+    each.key == "ecr.dkr" ? "${path.module}/policies/ecr_vpce_policy.json" :
     "${path.module}/policies/vpce_policy.json",
     {
       service_name = each.key,
@@ -40,7 +41,11 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
   security_group_ids = [module.security_groups.security_group_ids[each.key]]
   subnet_ids         = [module.vpc.private_subnets[0]]
 
-  depends_on = [null_resource.policy_trigger, null_resource.monitoring_policy_trigger]
+  depends_on = [
+    null_resource.policy_trigger, 
+    null_resource.monitoring_policy_trigger,
+    module.security_groups
+    ]
 }
 
 resource "aws_vpc_endpoint" "gateway_endpoints" {
