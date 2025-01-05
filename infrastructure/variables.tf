@@ -96,7 +96,7 @@ variable "services" {
   default = ["autoscaling", "dms", "ec2", "ec2messages",
     "elasticloadbalancing", "logs", "monitoring", "rds",
     "kms", "sns", "sqs", "ssm",
-  "ssmmessages", "sts", "ecr" ]
+  "ssmmessages", "sts", "ecr.api", "ecr.dkr" ]
 }
 
 variable "gateway_services" {
