@@ -28,6 +28,7 @@ resource "aws_vpc_endpoint" "service_vpc_endpoints" {
     each.key == "monitoring" ? "${path.module}/policies/monitoring_vpce_policy.json" :
     each.key == "ecr.api" ? "${path.module}/policies/ecr_vpce_policy.json" :
     each.key == "ecr.dkr" ? "${path.module}/policies/ecr_vpce_policy.json" :
+    each.key == "ec2" ? "${path.module}/policies/ec2_vpce_policy.json" :
     "${path.module}/policies/vpce_policy.json",
     {
       service_name = each.key,
