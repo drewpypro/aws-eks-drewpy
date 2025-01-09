@@ -1,5 +1,7 @@
 service:
-  type: NodePort
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: "sg-0c2523fabe69d96a7"
   ports:
   - name: http
     port: 80
