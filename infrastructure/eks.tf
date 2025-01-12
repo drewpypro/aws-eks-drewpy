@@ -6,7 +6,7 @@ locals {
 }
 
 module "security_groups" {
-  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.38"
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git"
 
   vpc_id = module.vpc.vpc_id
 
