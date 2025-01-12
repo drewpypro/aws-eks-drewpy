@@ -6,7 +6,7 @@ locals {
 }
 
 module "security_groups" {
-  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.27"
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git"
 
   vpc_id = module.vpc.vpc_id
 
@@ -138,7 +138,9 @@ resource "aws_eks_node_group" "workers" {
 
   depends_on = [
     aws_eks_cluster.eks,
-    aws_launch_template.worker_node_group
+    aws_launch_template.worker_node_group,
+    aws_vpc_endpoint.service_vpc_endpoints,
+    aws_vpc_endpoint.gateway_endpoints
   ]
 }
 
@@ -178,7 +180,9 @@ resource "aws_eks_node_group" "istio_ingress" {
   )
   depends_on = [
     aws_eks_cluster.eks,
-    aws_launch_template.istio_node_group
+    aws_launch_template.istio_node_group,
+    aws_vpc_endpoint.service_vpc_endpoints,
+    aws_vpc_endpoint.gateway_endpoints
   ]
 }
 

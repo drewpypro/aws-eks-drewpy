@@ -17,11 +17,6 @@
 
 #   iam_instance_profile = aws_iam_instance_profile.test_instance_profile.name
 
-#   user_data = templatefile("scripts/test_ec2_startup.sh", {
-#     PUBLIC_KEY         = var.PUBLIC_KEY
-#     SOURCE_SSH_NET     = var.SOURCE_SSH_NET
-#   })
-
 #   depends_on = [
 #     module.vpc,
 #     module.security_groups,

@@ -176,6 +176,12 @@ aws-eks-drewpy/
   kubectl port-forward -n argocd svc/argocd-server 8080:80
   ```
 
+- Print query_name from specific query id. (Clouwatch event history)
+  ```
+  aws logs get-query-results --query-id <query-id> | jq -r '.results[] | .[] | select(.field == "query_name") | .value'
+
+  ```
+
 - Retrieve and parse logs
   ```
   aws logs create-export-task \
