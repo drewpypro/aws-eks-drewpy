@@ -224,6 +224,6 @@ resource "aws_eks_addon" "eks_pod_identity_agent" {
 }
 
 output "internet_nlb_sg_id" {
-  value = aws_security_group.sgs["internet_nlb"].id
+  value = module.security_groups.security_group_ids["internet_nlb"]
   description = "The security group ID for internet_nlb"
 }
