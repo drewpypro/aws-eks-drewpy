@@ -222,3 +222,8 @@ resource "aws_eks_addon" "eks_pod_identity_agent" {
     aws_eks_node_group.workers
     ]
 }
+
+output "internet_nlb_sg_id" {
+  value = aws_security_group.sgs["internet_nlb"].id
+  description = "The security group ID for internet_nlb"
+}

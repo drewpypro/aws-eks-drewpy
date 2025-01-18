@@ -6,7 +6,7 @@ metadata:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
     service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-    service.beta.kubernetes.io/aws-load-balancer-security-groups: "sg-04d7ad71e36d890f1"
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: "{{NLB_SG_ID}}"
 spec:
   ports:
     - port: 80
