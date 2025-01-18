@@ -110,7 +110,7 @@ steps:
 
     # Retrieve NLB SG ID from Terraform
     - NLB_SG_ID=$(terraform output -raw internet_nlb_sg_id))
-    - echo "NLB SG_ID saved: $NLB_SG_ID"
+    - echo "NLB SG_ID saved $NLB_SG_ID"
     - sed -i "s|{{NLB_SG_ID}}|$NLB_SG_ID|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests/istio-values.yaml
     - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests/istio-values.yaml
 
@@ -191,7 +191,7 @@ steps:
 
     # Retrieve NLB CNAME from Kubernetes Service
     - NLB_CNAME=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-    - echo "NLB CNAME saved: $NLB_CNAME"
+    - echo "NLB CNAME saved $NLB_CNAME"
     - sed -i "s|{{NLB_CNAME}}|$NLB_CNAME|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
     - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
 
