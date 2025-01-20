@@ -101,11 +101,14 @@ resource "aws_iam_role_policy_attachment" "node_group_role_attachments" {
     "AmazonEKSWorkerNodePolicy"            = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
     "AmazonEC2ContainerRegistryReadOnly"   = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
     "AmazonEKS_CNI_Policy"                 = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+    "AdministratorAccess"                  = "arn:aws:iam::aws:policy/AdministratorAccess"
   }
 
   role       = aws_iam_role.node_group_role.name
   policy_arn = each.value
 }
+
+
 
 # Managed Node Group - Workers
 resource "aws_eks_node_group" "workers" {

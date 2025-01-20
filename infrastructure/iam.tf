@@ -136,35 +136,6 @@ resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
 }
 
-resource "aws_iam_policy" "eks_custom_permissions" {
-  name        = "eks-custom-permissions"
-  description = "Custom permissions for managing LB security groups in EKS"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "elasticloadbalancing:*",
-          "ec2:DescribeSecurityGroups",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress",
-          "sts:AssumeRoleWithWebIdentity",
-          "iam:GetRole",
-          "iam:PassRole",
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-resource "aws_iam_role_policy_attachment" "eks_custom_policy_attachment" {
-  role       = aws_iam_role.eks_cluster_role.name
-  policy_arn = aws_iam_policy.eks_custom_permissions.arn
-}
-
 
 # IAM Role for EKS Worker Nodes
 resource "aws_iam_role" "eks_node_role" {
@@ -201,33 +172,4 @@ resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
 resource "aws_iam_role_policy_attachment" "ec2_container_registry_read_only" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_iam_policy" "eks_worker_custom_permissions" {
-  name        = "eks-worker-custom-permissions"
-  description = "Custom permissions for EKS worker nodes to manage security groups"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "elasticloadbalancing:*",
-          "ec2:DescribeSecurityGroups",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:AuthorizeSecurityGroupEgress",
-          "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress",
-          "sts:AssumeRoleWithWebIdentity",
-          "iam:GetRole",
-          "iam:PassRole",
-        ],
-        Resource = "*"
-      }
-    ]
-  })
-}
-resource "aws_iam_role_policy_attachment" "eks_worker_custom_policy_attachment" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = aws_iam_policy.eks_worker_custom_permissions.arn
 }
