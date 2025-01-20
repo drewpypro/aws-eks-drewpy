@@ -158,7 +158,6 @@ steps:
     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
   
     # Install Istio using Helm
-    - sed -i "s|{{NLB_SG_ID}}|$NLB_SG_ID|" istio-values.yaml 
     - helm repo add istio https://istio-release.storage.googleapis.com/charts
     - helm repo update
     - kubectl create namespace istio-system || true
@@ -190,7 +189,7 @@ steps:
     - kubectl wait --for=condition=available --timeout=300s deployment/aws-load-balancer-controller -n kube-system
 
     # Retrieve NLB CNAME from Kubernetes Service
-    - kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}
+    - kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
     - NLB_CNAME=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
     - echo "NLB CNAME saved $NLB_CNAME"
     - sed -i "s|{{NLB_CNAME}}|$NLB_CNAME|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
