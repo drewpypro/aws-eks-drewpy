@@ -150,7 +150,10 @@ resource "aws_iam_policy" "eks_custom_permissions" {
           "ec2:AuthorizeSecurityGroupIngress",
           "ec2:AuthorizeSecurityGroupEgress",
           "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress"
+          "ec2:RevokeSecurityGroupEgress",
+          "sts:AssumeRoleWithWebIdentity",
+          "iam:GetRole",
+          "iam:PassRole",
         ],
         Resource = "*"
       }
@@ -214,7 +217,10 @@ resource "aws_iam_policy" "eks_worker_custom_permissions" {
           "ec2:AuthorizeSecurityGroupIngress",
           "ec2:AuthorizeSecurityGroupEgress",
           "ec2:RevokeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupEgress"
+          "ec2:RevokeSecurityGroupEgress",
+          "sts:AssumeRoleWithWebIdentity",
+          "iam:GetRole",
+          "iam:PassRole",
         ],
         Resource = "*"
       }
