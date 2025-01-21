@@ -1,0 +1,96 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingress
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - "cormorant.drewpy.pro"
+    - "anhinga.drewpy.pro"
+    - "gannet.drewpy.pro"
+    - "argocd.drewpy.pro"
+    tls:
+      mode: SIMPLE
+      credentialName: ingress-gateway-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingress
+  namespace: istio-ingress
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: "{{NLB_SG_ID}}"
+spec:
+  type: LoadBalancer
+  selector:
+    istio: ingress
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    nodePort: 30443
+    protocol: TCP
+  - name: healthz
+    port: 15021
+    targetPort: 15021
+    nodePort: 31170
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: istio-ingress
+  namespace: istio-ingress
+  labels:
+    istio: ingress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      istio: ingress
+  template:
+    metadata:
+      labels:
+        istio: ingress
+    spec:
+      serviceAccountName: istio-ingress
+      containers:
+      - name: istio-proxy
+        image: docker.io/istio/proxyv2:1.24.2
+        ports:
+        - containerPort: 15021
+        - containerPort: 80
+        - containerPort: 443
+      nodeSelector:
+        role: istio-ingress
+      tolerations:
+      - key: dedicated
+        operator: Equal
+        value: istio-ingress
+        effect: NoSchedule
