@@ -220,9 +220,10 @@ steps:
     - helm upgrade --install istiod istio/istiod --version 1.24.2 -n istio-system --create-namespace
     # - helm upgrade --install istio-ingress istio/gateway -f istio-values.yaml -n istio-ingress --create-namespace 
     - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
+    - kubectl create namespace istio-ingress || true
     - kubectl apply -f istio-gateway.yaml
     - kubectl -n istio-ingress rollout status deploy/istio-ingress --timeout=300s
-    
+
     ## Apply ClusterIssuer and Certs
     - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager.yaml 
     - kubectl apply -f cert-manager.yaml
