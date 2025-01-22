@@ -71,47 +71,47 @@ steps:
 #     - terraform init
 #     - terraform plan
 
-- name: terraform-apply
-  image: hashicorp/terraform:latest
-  network_mode: br1.201
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    TF_VAR_SOURCE_SSH_NET:
-      from_secret: TF_VAR_SOURCE_SSH_NET
-    TF_VAR_PUBLIC_KEY:
-      from_secret: TF_VAR_PUBLIC_KEY
-    TF_VAR_HOME_IP:
-      from_secret: TF_VAR_HOME_IP
-    CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    CLOUDFLARE_EMAIL:
-      from_secret: CLOUDFLARE_EMAIL
-    TF_VAR_CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    TF_VAR_CLOUDFLARE_ZONE_ID:
-      from_secret: CLOUDFLARE_ZONE_ID
-    TF_VAR_ORG_ID:
-      from_secret: TF_VAR_ORG_ID
-    TF_VAR_ORG_PATH:
-      from_secret: TF_VAR_ORG_PATH
-    TF_VAR_ACCOUNT_ID:
-      from_secret: TF_VAR_ACCOUNT_ID
-  commands:
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
-    - terraform init
-    - terraform apply -auto-approve
+# - name: terraform-apply
+#   image: hashicorp/terraform:latest
+#   network_mode: br1.201
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     TF_VAR_SOURCE_SSH_NET:
+#       from_secret: TF_VAR_SOURCE_SSH_NET
+#     TF_VAR_PUBLIC_KEY:
+#       from_secret: TF_VAR_PUBLIC_KEY
+#     TF_VAR_HOME_IP:
+#       from_secret: TF_VAR_HOME_IP
+#     CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     CLOUDFLARE_EMAIL:
+#       from_secret: CLOUDFLARE_EMAIL
+#     TF_VAR_CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     TF_VAR_CLOUDFLARE_ZONE_ID:
+#       from_secret: CLOUDFLARE_ZONE_ID
+#     TF_VAR_ORG_ID:
+#       from_secret: TF_VAR_ORG_ID
+#     TF_VAR_ORG_PATH:
+#       from_secret: TF_VAR_ORG_PATH
+#     TF_VAR_ACCOUNT_ID:
+#       from_secret: TF_VAR_ACCOUNT_ID
+#   commands:
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
+#     - terraform init
+#     - terraform apply -auto-approve
 
-    # Retrieve NLB SG ID from Terraform
-    - NLB_SG_ID=$(terraform output -raw internet_nlb_sg_id)
-    - echo "NLB SG_ID saved $NLB_SG_ID"
-    - sed -i "s|{{NLB_SG_ID}}|$NLB_SG_ID|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests/istio-ingress.yaml
-    - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests/istio-ingress.yaml
+#     # Retrieve NLB SG ID from Terraform
+#     - NLB_SG_ID=$(terraform output -raw internet_nlb_sg_id)
+#     - echo "NLB SG_ID saved $NLB_SG_ID"
+#     - sed -i "s|{{NLB_SG_ID}}|$NLB_SG_ID|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests/istio-ingress.yaml
+#     - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests/istio-ingress.yaml
 
 # - name: helm-destroy
 #   image: ghcr.io/drewpypro/kube-aws-istio:latest
@@ -168,53 +168,57 @@ steps:
 #     - kubectl get nodes -o wide
 #     - kubectl get pods --all-namespaces
 
-- name: helm-apply
-  image: ghcr.io/drewpypro/kube-aws-istio:latest
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
-    CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    CLOUDFLARE_EMAIL:
-      from_secret: CLOUDFLARE_EMAIL
-    TF_VAR_CLOUDFLARE_API_TOKEN:
-      from_secret: CLOUDFLARE_API_TOKEN
-    TF_VAR_CLOUDFLARE_ZONE_ID:
-      from_secret: CLOUDFLARE_ZONE_ID
-    TF_VAR_ORG_ID:
-      from_secret: TF_VAR_ORG_ID
-    TF_VAR_ORG_PATH:
-      from_secret: TF_VAR_ORG_PATH
-    TF_VAR_ACCOUNT_ID:
-      from_secret: TF_VAR_ACCOUNT_ID
-  volumes:
-    - name: terraform
-      path: /workspace/terraform
-  commands:
+# - name: helm-apply
+#   image: ghcr.io/drewpypro/kube-aws-istio:latest
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     CLOUDFLARE_EMAIL:
+#       from_secret: CLOUDFLARE_EMAIL
+#     TF_VAR_CLOUDFLARE_API_TOKEN:
+#       from_secret: CLOUDFLARE_API_TOKEN
+#     TF_VAR_CLOUDFLARE_ZONE_ID:
+#       from_secret: CLOUDFLARE_ZONE_ID
+#     TF_VAR_ORG_ID:
+#       from_secret: TF_VAR_ORG_ID
+#     TF_VAR_ORG_PATH:
+#       from_secret: TF_VAR_ORG_PATH
+#     TF_VAR_ACCOUNT_ID:
+#       from_secret: TF_VAR_ACCOUNT_ID
+#   volumes:
+#     - name: terraform
+#       path: /workspace/terraform
+#   commands:
 
-    # Set Path
-    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests
-    # Configure kubectl for the cluster
-    - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
-    - export KUBECONFIG=/root/.kube/config
-    - kubectl wait --for=condition=Ready nodes --all --timeout=300s
+#     # Set Path
+#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/manifests
+#     # Configure kubectl for the cluster
+#     - aws eks update-kubeconfig --region us-east-1 --name eks-drewpy
+#     - export KUBECONFIG=/root/.kube/config
+#     - kubectl wait --for=condition=Ready nodes --all --timeout=300s
     
-    # Install Cert-Manager
-    - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
-    - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
-    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
+#     # Install Cert-Manager
+#     - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
+#     - kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager
+#     - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager
 
-    # Create Secrets for Cert-Manager
-    - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
-  
+#     # Create Secrets for Cert-Manager
+#     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
+    
+#   # Install aws-load-balancer-controller
+#     - helm repo add eks https://aws.github.io/eks-charts
+#     - helm repo update
+#     - kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
+#     - helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=eks-drewpy
 #     # Install Istio using Helm
 #     - helm repo add istio https://istio-release.storage.googleapis.com/charts
 #     - helm repo update
-#     - kubectl create namespace istio-system || true
 #     - helm upgrade --install istio-base istio/base --version 1.24.2 -n istio-system --create-namespace
 #     - helm upgrade --install istiod istio/istiod --version 1.24.2 -n istio-system --create-namespace
 #     - helm upgrade --install istio-ingress istio/gateway --version 1.24.2 -f istio-ingress.yaml -n istio-ingress --create-namespace 
@@ -233,7 +237,8 @@ steps:
 #     - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd-values.yaml
 #     - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
 #     - kubectl apply -f argocd-install.yaml
-#     - helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=eks-drewpy
+
+
 #     # Retrieve NLB CNAME from Kubernetes Service
 #     - kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 #     - NLB_CNAME=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
@@ -278,41 +283,41 @@ steps:
 #     - terraform init
 #     - terraform apply -auto-approve
 
-# - name: terraform-destroy
-#   image: hashicorp/terraform:latest
-#   network_mode: br1.201
-#   volumes:
-#     - name: terraform
-#       path: /workspace/terraform
-#   environment:
-#     AWS_ACCESS_KEY_ID:
-#       from_secret: AWS_ACCESS_KEY_ID
-#     AWS_SECRET_ACCESS_KEY:
-#       from_secret: AWS_SECRET_ACCESS_KEY
-#     TF_VAR_SOURCE_SSH_NET:
-#       from_secret: TF_VAR_SOURCE_SSH_NET
-#     TF_VAR_PUBLIC_KEY:
-#       from_secret: TF_VAR_PUBLIC_KEY
-#     TF_VAR_HOME_IP:
-#       from_secret: TF_VAR_HOME_IP
-#     CLOUDFLARE_API_TOKEN:
-#       from_secret: CLOUDFLARE_API_TOKEN
-#     CLOUDFLARE_EMAIL:
-#       from_secret: CLOUDFLARE_EMAIL
-#     TF_VAR_CLOUDFLARE_API_TOKEN:
-#       from_secret: CLOUDFLARE_API_TOKEN
-#     TF_VAR_CLOUDFLARE_ZONE_ID:
-#       from_secret: CLOUDFLARE_ZONE_ID
-#     TF_VAR_ORG_ID:
-#       from_secret: TF_VAR_ORG_ID
-#     TF_VAR_ORG_PATH:
-#       from_secret: TF_VAR_ORG_PATH
-#     TF_VAR_ACCOUNT_ID:
-#       from_secret: TF_VAR_ACCOUNT_ID
-#   commands:
-#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
-#     - terraform init
-#     - terraform destroy -auto-approve
+- name: terraform-destroy
+  image: hashicorp/terraform:latest
+  network_mode: br1.201
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    TF_VAR_SOURCE_SSH_NET:
+      from_secret: TF_VAR_SOURCE_SSH_NET
+    TF_VAR_PUBLIC_KEY:
+      from_secret: TF_VAR_PUBLIC_KEY
+    TF_VAR_HOME_IP:
+      from_secret: TF_VAR_HOME_IP
+    CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    CLOUDFLARE_EMAIL:
+      from_secret: CLOUDFLARE_EMAIL
+    TF_VAR_CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    TF_VAR_CLOUDFLARE_ZONE_ID:
+      from_secret: CLOUDFLARE_ZONE_ID
+    TF_VAR_ORG_ID:
+      from_secret: TF_VAR_ORG_ID
+    TF_VAR_ORG_PATH:
+      from_secret: TF_VAR_ORG_PATH
+    TF_VAR_ACCOUNT_ID:
+      from_secret: TF_VAR_ACCOUNT_ID
+  commands:
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
+    - terraform init
+    - terraform destroy -auto-approve
 
 trigger:
   branch:
