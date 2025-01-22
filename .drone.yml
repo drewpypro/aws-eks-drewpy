@@ -211,77 +211,77 @@ steps:
     # Create Secrets for Cert-Manager
     - kubectl create secret generic cloudflare-api-token --from-literal=api-token=$CLOUDFLARE_API_TOKEN -n cert-manager || true
     
-  # # Install aws-load-balancer-controller
-  #   - helm repo add eks https://aws.github.io/eks-charts
-  #   - helm repo update
-  #   - kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
-  #   - helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=eks-drewpy
-  #   # Install Istio using Helm
-  #   - helm repo add istio https://istio-release.storage.googleapis.com/charts
-  #   - helm repo update
-  #   - helm upgrade --install istio-base istio/base --version 1.24.2 -n istio-system --create-namespace
-  #   - helm upgrade --install istiod istio/istiod --version 1.24.2 -n istio-system --create-namespace
-  #   - helm upgrade --install istio-ingress istio/gateway --version 1.24.2 -f istio-ingress.yaml -n istio-ingress --create-namespace 
-  #   - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
-  #   - kubectl apply -f istio-config.yaml
-  #   - kubectl -n istio-ingress rollout status deploy/istio-ingress --timeout=300s
+  # Install aws-load-balancer-controller
+    - helm repo add eks https://aws.github.io/eks-charts
+    - helm repo update
+    - kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/crds?ref=master"
+    - helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=eks-drewpy --set region=us-east-1
+    # Install Istio using Helm
+    - helm repo add istio https://istio-release.storage.googleapis.com/charts
+    - helm repo update
+    - helm upgrade --install istio-base istio/base --version 1.24.2 -n istio-system --create-namespace
+    - helm upgrade --install istiod istio/istiod --version 1.24.2 -n istio-system --create-namespace
+    - helm upgrade --install istio-ingress istio/gateway --version 1.24.2 -f istio-ingress.yaml -n istio-ingress --create-namespace --set region=us-east-1 
+    - kubectl -n istio-system rollout status deploy/istiod --timeout=300s
+    - kubectl apply -f istio-config.yaml
+    - kubectl -n istio-ingress rollout status deploy/istio-ingress --timeout=300s
 
-  #   ## Apply ClusterIssuer and Certs
-  #   - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager.yaml 
-  #   - kubectl apply -f cert-manager.yaml
-  #   - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
+    ## Apply ClusterIssuer and Certs
+    - sed -i "s|{{EMAIL_PLACEHOLDER}}|$CLOUDFLARE_EMAIL|" cert-manager.yaml 
+    - kubectl apply -f cert-manager.yaml
+    - kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager
 
-  #   # Install ArgoCD using Helm
-  #   - helm repo add argo https://argoproj.github.io/argo-helm
-  #   - helm repo update
-  #   - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd-values.yaml
-  #   - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
-  #   - kubectl apply -f argocd-install.yaml
+    # Install ArgoCD using Helm
+    - helm repo add argo https://argoproj.github.io/argo-helm
+    - helm repo update
+    - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd-values.yaml
+    - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
+    - kubectl apply -f argocd-install.yaml
 
 
-  #   # Retrieve NLB CNAME from Kubernetes Service
-  #   - kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-  #   - NLB_CNAME=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-  #   - echo "NLB CNAME saved $NLB_CNAME"
-  #   - sed -i "s|{{NLB_CNAME}}|$NLB_CNAME|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
-  #   - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
+    # Retrieve NLB CNAME from Kubernetes Service
+    - kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+    - NLB_CNAME=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+    - echo "NLB CNAME saved $NLB_CNAME"
+    - sed -i "s|{{NLB_CNAME}}|$NLB_CNAME|" /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
+    - cat /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf/cloudflare.tf
 
-  #   - helm list -A
+    - helm list -A
     
-  #   # Verify Kubernetes state
-  #   - kubectl get nodes -o wide
-  #   - kubectl get pods --all-namespaces
+    # Verify Kubernetes state
+    - kubectl get nodes -o wide
+    - kubectl get pods --all-namespaces
 
 
-# - name: waf-apply
-#   image: hashicorp/terraform:latest
-#   environment:
-#     AWS_ACCESS_KEY_ID:
-#       from_secret: AWS_ACCESS_KEY_ID
-#     AWS_SECRET_ACCESS_KEY:
-#       from_secret: AWS_SECRET_ACCESS_KEY
-#     CLOUDFLARE_API_TOKEN:
-#       from_secret: CLOUDFLARE_API_TOKEN
-#     CLOUDFLARE_EMAIL:
-#       from_secret: CLOUDFLARE_EMAIL
-#     TF_VAR_CLOUDFLARE_API_TOKEN:
-#       from_secret: CLOUDFLARE_API_TOKEN
-#     TF_VAR_CLOUDFLARE_ZONE_ID:
-#       from_secret: CLOUDFLARE_ZONE_ID
-#     TF_VAR_ORG_ID:
-#       from_secret: TF_VAR_ORG_ID
-#     TF_VAR_ORG_PATH:
-#       from_secret: TF_VAR_ORG_PATH
-#     TF_VAR_ACCOUNT_ID:
-#       from_secret: TF_VAR_ACCOUNT_ID
-#   volumes:
-#     - name: terraform
-#       path: /workspace/terraform
-#   commands:
+- name: waf-apply
+  image: hashicorp/terraform:latest
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    CLOUDFLARE_EMAIL:
+      from_secret: CLOUDFLARE_EMAIL
+    TF_VAR_CLOUDFLARE_API_TOKEN:
+      from_secret: CLOUDFLARE_API_TOKEN
+    TF_VAR_CLOUDFLARE_ZONE_ID:
+      from_secret: CLOUDFLARE_ZONE_ID
+    TF_VAR_ORG_ID:
+      from_secret: TF_VAR_ORG_ID
+    TF_VAR_ORG_PATH:
+      from_secret: TF_VAR_ORG_PATH
+    TF_VAR_ACCOUNT_ID:
+      from_secret: TF_VAR_ACCOUNT_ID
+  volumes:
+    - name: terraform
+      path: /workspace/terraform
+  commands:
 
-#     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf
-#     - terraform init
-#     - terraform apply -auto-approve
+    - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/waf
+    - terraform init
+    - terraform apply -auto-approve
 
 # - name: terraform-destroy
 #   image: hashicorp/terraform:latest
