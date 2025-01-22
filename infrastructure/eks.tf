@@ -19,6 +19,11 @@ resource "aws_launch_template" "worker_node_group" {
     security_groups = [module.security_groups.security_group_ids["worker_nodes"]]
   }
 
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "optional"
+  }
+
   tag_specifications {
     resource_type = "instance"
     tags = merge(
@@ -34,6 +39,11 @@ resource "aws_launch_template" "istio_node_group" {
 
   network_interfaces {
     security_groups = [module.security_groups.security_group_ids["istio_nodes"]]
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "optional"
   }
 
   tag_specifications {
