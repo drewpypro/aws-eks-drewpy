@@ -106,7 +106,6 @@ steps:
     - cd /workspace/terraform/${DRONE_REPO_OWNER}/${DRONE_REPO_NAME}/infrastructure
     - terraform init
     - terraform apply -auto-approve
-    - terraform apply -target=aws_lb.istio_ingress_nlb -target=aws_lb_target_group_attachment.istio_http_attachment -target=aws_lb_target_group_attachment.istio_https_attachment -target=aws_lb_target_group_attachment.argocd_http_attachment -auto-approve
 
     # Retrieve NLB SG ID from Terraform
     - NLB_SG_ID=$(terraform output -raw internet_nlb_sg_id)
@@ -234,7 +233,7 @@ steps:
 #     - helm upgrade --install argocd argo/argo-cd --namespace argocd --create-namespace -f argocd-values.yaml
 #     - kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
 #     - kubectl apply -f argocd-install.yaml
-
+#     - helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=eks-drewpy
 #     # Retrieve NLB CNAME from Kubernetes Service
 #     - kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 #     - NLB_CNAME=$(kubectl get svc istio-ingress -n istio-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
