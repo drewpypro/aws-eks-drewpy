@@ -241,7 +241,7 @@ output "internet_nlb_sg_id" {
   description = "The security group ID for internet_nlb"
 }
 
-output "security_group_id" {
-  value = module.security_groups.security_groups_ids
+output "security_group_map" {
+  value = module.security_groups.security_group_ids
   description = "Map of SGs"
 }
