@@ -240,3 +240,8 @@ output "internet_nlb_sg_id" {
   value = module.security_groups.security_group_ids["internet_nlb"]
   description = "The security group ID for internet_nlb"
 }
+
+output "security_group_id" {
+  value = module.security_groups.security_groups_ids
+  description = "Map of SGs"
+}
