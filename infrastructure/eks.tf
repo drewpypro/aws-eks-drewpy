@@ -6,7 +6,7 @@ locals {
 }
 
 module "security_groups" {
-  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git"
+  source  = "git::https://github.com/drewpypro/terraform-aws-sg-module-template.git?ref=v2.0.40"
 
   vpc_id = module.vpc.vpc_id
 
@@ -17,6 +17,11 @@ resource "aws_launch_template" "worker_node_group" {
 
   network_interfaces {
     security_groups = [module.security_groups.security_group_ids["worker_nodes"]]
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "optional"
   }
 
   tag_specifications {
@@ -34,6 +39,11 @@ resource "aws_launch_template" "istio_node_group" {
 
   network_interfaces {
     security_groups = [module.security_groups.security_group_ids["istio_nodes"]]
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "optional"
   }
 
   tag_specifications {
@@ -101,11 +111,14 @@ resource "aws_iam_role_policy_attachment" "node_group_role_attachments" {
     "AmazonEKSWorkerNodePolicy"            = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
     "AmazonEC2ContainerRegistryReadOnly"   = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
     "AmazonEKS_CNI_Policy"                 = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+    "AdministratorAccess"                  = "arn:aws:iam::aws:policy/AdministratorAccess"
   }
 
   role       = aws_iam_role.node_group_role.name
   policy_arn = each.value
 }
+
+
 
 # Managed Node Group - Workers
 resource "aws_eks_node_group" "workers" {
@@ -221,4 +234,14 @@ resource "aws_eks_addon" "eks_pod_identity_agent" {
     aws_eks_cluster.eks,
     aws_eks_node_group.workers
     ]
+}
+
+output "internet_nlb_sg_id" {
+  value = module.security_groups.security_group_ids["internet_nlb"]
+  description = "The security group ID for internet_nlb"
+}
+
+output "security_group_map" {
+  value = module.security_groups.security_group_ids
+  description = "Map of SGs"
 }
